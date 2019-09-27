@@ -15,3 +15,18 @@ def test_count_ngrams(trigram_model_brown_train):
     assert trigram_model_brown_train.unigramcounts[('the',)] == 61428
     assert trigram_model_brown_train.bigramcounts[('START', 'the',)] == 5478
     assert trigram_model_brown_train.trigramcounts[('START', 'START', 'the',)] == 5478
+
+def test_generate_trigram_prob_dist(trigram_model_brown_train):
+    assert sum(trigram_model_brown_train.generate_trigram_probability_distribution(('START', 'START'))[1]) < 1.000001
+    assert sum(trigram_model_brown_train.generate_trigram_probability_distribution(('START', 'START'))[1]) > 0.999999
+
+def test_generate_sentence(trigram_model_brown_train):
+    random_sentence_1 = trigram_model_brown_train.generate_sentence(10)
+    assert len(random_sentence_1) < 11
+    if (len(random_sentence_1) < 10):
+        assert random_sentence_1[9] == 'STOP'
+
+    random_sentence_2 = trigram_model_brown_train.generate_sentence(20)
+    assert len(random_sentence_2) < 21
+    if (len(random_sentence_2) < 20):
+        assert random_sentence_2[19] == 'STOP'

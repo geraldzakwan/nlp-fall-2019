@@ -112,6 +112,7 @@ class TrigramModel(object):
         self.total_bigrams = sum(self.bigramcounts.values())
         self.total_trigrams = sum(self.trigramcounts.values())
 
+
     def raw_trigram_probability(self,trigram):
         """
         COMPLETE THIS METHOD (PART 3)
@@ -126,6 +127,7 @@ class TrigramModel(object):
             return 0
 
         return self.trigramcounts(trigram) / denominator
+
 
     def raw_bigram_probability(self, bigram):
         """
@@ -142,6 +144,7 @@ class TrigramModel(object):
 
         return self.bigramcounts(bigram) / denominator
 
+
     def raw_unigram_probability(self, unigram):
         """
         COMPLETE THIS METHOD (PART 3)
@@ -151,24 +154,45 @@ class TrigramModel(object):
         # The denominator is always greater than zero, NaN is not a possibility
         return self.unigramcounts(unigram) / self.total_words
 
-    # def generate_trigram_probability_distribution(self, bigram):
-    #     for i in range)
 
-    def generate_sentence(self,t=20):
+    def generate_trigram_probability_distribution(self, given_bigram):
+        word_list = []
+        trigram_prob_dist = []
+
+        for trigram in self.trigramcounts:
+            if trigram[2] != 'START' and given_bigram == trigram[0:2]:
+                word_list.append(trigram[2])
+                trigram_prob_dist.append(self.trigramcounts[trigram] / self.bigramcounts[given_bigram])
+
+        # Ask TA why this sums to 1.000000000000061 instead of 1 for ('START', 'START')
+        # Maybe this relates to rounding, if it is, is it okay?
+        return word_list, trigram_prob_dist
+
+
+    def generate_sentence(self, t=20):
         """
         COMPLETE THIS METHOD (OPTIONAL)
         Generate a random sentence from the trigram model. t specifies the
         max length, but the sentence may be shorter if STOP is reached.
         """
-        # for i in range(0, t):
-        #     if i == 0:
-        #         trigram = ('START', 'START',)
-        #         np.random.multinomial(10, self., size=1)
-        #     else:
-        #         return 0
-        #
-        # return result
-        return []
+        bigram = ['START', 'START']
+        produced_words = []
+
+        for i in range(0, t):
+             word_list, trigram_prob_dist = self.generate_trigram_probability_distribution(tuple(bigram))
+             exp_prob_dist = np.random.multinomial(10, trigram_prob_dist, size=1)
+             idx = np.argmin(exp_prob_dist)
+             word = word_list[idx]
+
+             produced_words.append(word)
+             bigram[0] = bigram[1]
+             bigram[1] = word
+
+             if word == 'STOP':
+                 break
+
+        return produced_words
+
 
     def smoothed_trigram_probability(self, trigram):
         """
