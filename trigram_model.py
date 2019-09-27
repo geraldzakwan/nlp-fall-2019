@@ -2,6 +2,7 @@ import sys
 from collections import defaultdict
 import math
 import random
+import numpy as np
 import os
 import os.path
 from helper import Helper
@@ -23,12 +24,20 @@ def corpus_reader(corpusfile, lexicon=None):
                     yield sequence
 
 
-def count_words_and_get_lexicon(corpus):
+# def count_words_and_get_lexicon(corpus):
+#     word_counts = defaultdict(int)
+#     for sentence in corpus:
+#         for word in sentence:
+#             word_counts[word] += 1
+#     return (sum(word_counts.values()), set(word for word in word_counts if word_counts[word] > 1))
+
+
+def get_lexicon(corpus):
     word_counts = defaultdict(int)
     for sentence in corpus:
         for word in sentence:
             word_counts[word] += 1
-    return (sum(word_counts.values()), set(word for word in word_counts if word_counts[word] > 1))
+    return set(word for word in word_counts if word_counts[word] > 1)
 
 
 def get_ngrams(sequence, n):
@@ -65,11 +74,9 @@ class TrigramModel(object):
 
     def __init__(self, corpusfile):
 
-        # Iterate through the corpus once to count the total number of words
-        # and to build a lexicon
-        # For total number of words, 'START' and 'STOP' are excluded
+        # Iterate through the corpus once to to build a lexicon
         generator = corpus_reader(corpusfile)
-        self.total_words, self.lexicon = count_words_and_get_lexicon(generator)
+        self.lexicon = get_lexicon(generator)
         self.lexicon.add("UNK")
         self.lexicon.add("START")
         self.lexicon.add("STOP")
@@ -100,19 +107,40 @@ class TrigramModel(object):
             for trigram in get_ngrams(sentence, 3):
                 self.trigramcounts[trigram] += 1
 
+        # For the total number of words, 'START' and 'STOP' are excluded
+        self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {'START', 'STOP'})
+        self.total_bigrams = sum(self.bigramcounts.values())
+        self.total_trigrams = sum(self.trigramcounts.values())
+
     def raw_trigram_probability(self,trigram):
         """
         COMPLETE THIS METHOD (PART 3)
         Returns the raw (unsmoothed) trigram probability
         """
-        return 0.0
+
+        denominator = self.bigramcounts(trigram[1:3])
+
+        # If the denominator is zero, just return zero
+        # Think of this as if p(b,c)=0, then p(a|b,c) should also be zero
+        if denominator == 0:
+            return 0
+
+        return self.trigramcounts(trigram) / denominator
 
     def raw_bigram_probability(self, bigram):
         """
         COMPLETE THIS METHOD (PART 3)
         Returns the raw (unsmoothed) bigram probability
         """
-        return 0.0
+
+        denominator = self.unigramcounts(bigram[1])
+
+        # If the denominator is zero, just return zero
+        # Think of this as if p(b)=0, then p(a|b) should also be zero
+        if denominator == 0:
+            return 0
+
+        return self.bigramcounts(bigram) / denominator
 
     def raw_unigram_probability(self, unigram):
         """
@@ -120,10 +148,11 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) unigram probability.
         """
 
-        #hint: recomputing the denominator every time the method is called
-        # can be slow! You might want to compute the total number of words once,
-        # store in the TrigramModel instance, and then re-use it.
-        return 0.0
+        # The denominator is always greater than zero, NaN is not a possibility
+        return self.unigramcounts(unigram) / self.total_words
+
+    # def generate_trigram_probability_distribution(self, bigram):
+    #     for i in range)
 
     def generate_sentence(self,t=20):
         """
@@ -131,7 +160,15 @@ class TrigramModel(object):
         Generate a random sentence from the trigram model. t specifies the
         max length, but the sentence may be shorter if STOP is reached.
         """
-        return result
+        # for i in range(0, t):
+        #     if i == 0:
+        #         trigram = ('START', 'START',)
+        #         np.random.multinomial(10, self., size=1)
+        #     else:
+        #         return 0
+        #
+        # return result
+        return []
 
     def smoothed_trigram_probability(self, trigram):
         """
