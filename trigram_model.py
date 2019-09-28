@@ -5,7 +5,8 @@ import random
 import numpy as np
 import os
 import os.path
-from helper import Helper
+from helper import Helper, start_token, stop_token, unk_token
+
 
 """
 COMS W4705 - Natural Language Processing - Fall 2019
@@ -13,13 +14,14 @@ Homework 1 - Programming Component: Trigram Language Models
 Yassine Benajiba
 """
 
+
 def corpus_reader(corpusfile, lexicon=None):
     with open(corpusfile,'r') as corpus:
         for line in corpus:
             if line.strip():
                 sequence = line.lower().strip().split()
                 if lexicon:
-                    yield [word if word in lexicon else "UNK" for word in sequence]
+                    yield [word if word in lexicon else unk_token for word in sequence]
                 else:
                     yield sequence
 
@@ -46,16 +48,17 @@ def get_ngrams(sequence, n):
     Given a sequence, this function should return a list of n-grams, where each n-gram is a Python tuple.
     This should work for arbitrary values of 1 <= n < len(sequence).
     """
+
     if Helper.is_empty(sequence):
         return []
 
     if n == 1:
-        sequence.insert(0, 'START')
+        sequence.insert(0, start_token)
     else:
         for k in range(0, n - 1):
-            sequence.insert(0, 'START')
+            sequence.insert(0, start_token)
 
-    sequence.append('STOP')
+    sequence.append(stop_token)
 
     list_of_n_grams = []
 
@@ -77,13 +80,18 @@ class TrigramModel(object):
         # Iterate through the corpus once to to build a lexicon
         generator = corpus_reader(corpusfile)
         self.lexicon = get_lexicon(generator)
-        self.lexicon.add("UNK")
-        self.lexicon.add("START")
-        self.lexicon.add("STOP")
+        self.lexicon.add(unk_token)
+        self.lexicon.add(start_token)
+        self.lexicon.add(stop_token)
 
         # Now iterate through the corpus again and count ngrams
         generator = corpus_reader(corpusfile, self.lexicon)
         self.count_ngrams(generator)
+
+        # For the total number of words, 'START' and 'STOP' are excluded
+        self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {start_token, stop_token})
+        self.total_bigrams = sum(self.bigramcounts.values())
+        self.total_trigrams = sum(self.trigramcounts.values())
 
 
     def count_ngrams(self, corpus):
@@ -107,11 +115,6 @@ class TrigramModel(object):
             for trigram in get_ngrams(sentence, 3):
                 self.trigramcounts[trigram] += 1
 
-        # For the total number of words, 'START' and 'STOP' are excluded
-        self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {'START', 'STOP'})
-        self.total_bigrams = sum(self.bigramcounts.values())
-        self.total_trigrams = sum(self.trigramcounts.values())
-
 
     def raw_trigram_probability(self,trigram):
         """
@@ -119,11 +122,22 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) trigram probability
         """
 
-        denominator = self.bigramcounts[trigram[0:2]]
+        # Tricky thing is to make sure param is always in the form of tuple
+        if not Helper.is_valid_n_grams(trigram, 3):
+            raise Exception
 
+        denominator = self.bigramcounts[trigram[0:2]]
         # If the denominator is zero, just return zero
         # Think of this as if p(b,c)=0, then p(a|b,c) should also be zero
         if denominator == 0:
+            # Special case for ('START', 'START', 'someword',)
+            # We can just calculate for ('START', 'someword',) because both
+            # denote the same meaning, which is the probability of 'someword'
+            # appears as the first word in a sentence
+            # if trigram[0:2] == (start_token, start_token,):
+            #     return raw_bigram_probability((start_token, trigram[3]))
+            # But somehow, we don't need this as we always append
+            # two start tokens to the sentence before calculating trigram
             return 0
 
         return self.trigramcounts[trigram] / denominator
@@ -135,7 +149,11 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) bigram probability
         """
 
-        denominator = self.unigramcounts[bigram[0]]
+        # Tricky thing is to make sure param is always in the form of tuple
+        if not Helper.is_valid_n_grams(bigram, 2):
+            raise Exception
+
+        denominator = self.unigramcounts[(bigram[0],)]
 
         # If the denominator is zero, just return zero
         # Think of this as if p(b)=0, then p(a|b) should also be zero
@@ -151,6 +169,10 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) unigram probability.
         """
 
+        # Tricky thing is to make sure param is always in the form of tuple
+        if not Helper.is_valid_n_grams(unigram, 1):
+            raise Exception
+
         # The denominator is always greater than zero, NaN is not a possibility
         return self.unigramcounts[unigram] / self.total_words
 
@@ -162,13 +184,9 @@ class TrigramModel(object):
         # Maybe this relates to rounding
 
         for trigram in self.trigramcounts:
-            if trigram[2] != 'START' and given_bigram == trigram[0:2]:
+            if trigram[2] != start_token and given_bigram == trigram[0:2]:
                 word_list.append(trigram[2])
-                # print(type(trigram))
-                # print(len(trigram))
-                # print(trigram)
                 trigram_prob_dist.append(self.raw_trigram_probability(trigram))
-                # trigram_prob_dist.append(self.trigramcounts[trigram] / self.bigramcounts[given_bigram])
 
         # Size of returned list can vary
         # For example, if size=6, that means there are only 6 words in the corpus
@@ -182,7 +200,8 @@ class TrigramModel(object):
         Generate a random sentence from the trigram model. t specifies the
         max length, but the sentence may be shorter if STOP is reached.
         """
-        bigram = ['START', 'START']
+
+        bigram = [start_token, start_token]
         produced_words = []
 
         for i in range(0, t):
@@ -198,9 +217,9 @@ class TrigramModel(object):
              # occurs in the experiment (10 times random sampling with replacement)
              # All elements of the list sum to 10
              if debug and len(word_list) < 20:
-                 print('------')
+                 print('----------')
                  print(exp_prob_dist)
-                 print('------')
+                 print('----------')
 
              # Find index with biggest occurence
              idx = np.argmax(exp_prob_dist)
@@ -215,7 +234,7 @@ class TrigramModel(object):
              bigram[0] = bigram[1]
              bigram[1] = word
 
-             if word == 'STOP':
+             if word == stop_token:
                  break
 
         return produced_words
@@ -226,17 +245,29 @@ class TrigramModel(object):
         COMPLETE THIS METHOD (PART 4)
         Returns the smoothed trigram probability (using linear interpolation).
         """
+
         lambda1 = 1/3.0
         lambda2 = 1/3.0
         lambda3 = 1/3.0
-        return 0.0
+
+        return lambda1*self.raw_trigram_probability(trigram) + lambda2*self.raw_bigram_probability(trigram[1:3]) + lambda2*self.raw_unigram_probability((trigram[2],))
 
     def sentence_logprob(self, sentence):
         """
         COMPLETE THIS METHOD (PART 5)
         Returns the log probability of an entire sequence.
         """
-        return float("-inf")
+
+        log_probs_sum = 0.0
+        for trigram in get_ngrams(sentence, 3):
+            log_prob = smoothed_trigram_probability(trigram)
+            if prob == 0:
+                print('This trigram has zero probs: ' + str(trigram))
+                return float("-inf")
+
+            log_probs += math.log2(log_prob)
+
+        return log_probs_sum
 
     def perplexity(self, corpus):
         """
