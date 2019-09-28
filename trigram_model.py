@@ -96,8 +96,12 @@ class TrigramModel(object):
         # 1. Do we exclude 'START' and 'STOP' when calculating the total number of words for unigram probability
         # 2. Do we exclude 'START' and 'STOP' when calculating the total number of words (M) for perplexity
 
-        # For the total number of words, 'START' and 'STOP' are excluded
-        self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {start_token, stop_token})
+        # For the total number of words, 'START' and 'STOP' are excluded ???
+        # TA Sujay says that he would prefer to count 'STOP' for unigram, but not 'START'
+        # We can define our assumption in README.txt or something
+        # self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {start_token, stop_token})
+        self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {(start_token,), (stop_token,)})
+        # self.total_words = sum(self.unigramcounts.values())
         # self.total_words_for_perplexity = ???
         self.total_bigrams = sum(self.bigramcounts.values())
         self.total_trigrams = sum(self.trigramcounts.values())
@@ -290,15 +294,16 @@ class TrigramModel(object):
 
         # Question to TA: Do we need to preprocess sentence to replace
         # OOV words with 'UNK'
-        print(sentence)
+
+        # print(sentence)
 
         log_probs_sum = 0.0
         for trigram in get_ngrams(sentence, 3):
             # print(trigram)
             log_prob = self.smoothed_trigram_probability(trigram)
 
-            print('total trigram prob')
-            print(log_prob)
+            # print('total trigram prob')
+            # print(log_prob)
 
             if log_prob == 0:
                 # Question to TA: How should we compute sentence_logprob if there is zero prob
@@ -308,11 +313,11 @@ class TrigramModel(object):
                 # log_probs_sum -= 1000
                 return -1000
             else:
-                print(math.log2(log_prob))
+                # print(math.log2(log_prob))
                 log_probs_sum += math.log2(log_prob)
 
-        print('total sentence prob')
-        print(log_probs_sum)
+        # print('total sentence prob')
+        # print(log_probs_sum)
         return log_probs_sum
 
     def perplexity(self, corpus):
@@ -327,10 +332,11 @@ class TrigramModel(object):
         # Question to TA: We always use training lexicon right???
         # Question to TA: We always use prob. from training data right???
         iter = 0
-        generator = corpus_reader(corpus, self.lexicon)
-        for sentence in generator:
-            if iter == 1:
-                break
+        # generator = corpus_reader(corpus, self.lexicon)
+        # for sentence in generator:
+        for sentence in corpus:
+            # if iter == 1:
+            #     break
 
             for unigram in get_ngrams(sentence, 1):
                 corpus_unigram_counts[unigram] += 1
@@ -340,33 +346,59 @@ class TrigramModel(object):
 
             iter = iter + 1
 
-        # Question to TA: Do we exclude 'START' and 'STOP' when calculating total words for perplexity
-        corpus_total_words = sum(count for word, count in corpus_unigram_counts.items() if word not in {start_token, stop_token})
+        # Question to TA: Do we exclude 'START' and 'STOP' when calculating total words for perplexity?
+        # If both are included, for brown test, this would yield 300ish perplexity
         # corpus_total_words = sum(corpus_unigram_counts.values())
+        # If both are excluded, for brown test, this would yield 170ish perplexity
+        corpus_total_words = sum(count for word, count in corpus_unigram_counts.items() if word not in {(start_token,), (stop_token,)})
 
-        print(l)
-        print(corpus_total_words)
+        # print(l)
+        # print(corpus_total_words)
         l = l / corpus_total_words
         return 2 ** ((-1)*l)
 
 
 def essay_scoring_experiment(training_file1, training_file2, testdir1, testdir2):
 
-        model1 = TrigramModel(training_file1)
-        model2 = TrigramModel(training_file2)
+        model1 = TrigramModel(training_file1) # trained on train_high.txt
+        model2 = TrigramModel(training_file2) # trained on train_low.txt
 
         total = 0
         correct = 0
 
+        # This will be for test_high
         for f in os.listdir(testdir1):
-            pp = model1.perplexity(corpus_reader(os.path.join(testdir1, f), model1.lexicon))
-            # ..
+            # print(f)
+            # print(os.path.join(testdir1, f))
+            # raise Exception
+            pp_high = model1.perplexity(corpus_reader(os.path.join(testdir1, f), model1.lexicon))
+            pp_low = model2.perplexity(corpus_reader(os.path.join(testdir1, f), model2.lexicon))
 
+            if pp_high < pp_low:
+                correct = correct + 1
+
+            total = total + 1
+
+        correct1 = correct
+        total1 = total
+
+        # This will be for test_low
         for f in os.listdir(testdir2):
-            pp = model2.perplexity(corpus_reader(os.path.join(testdir2, f), model2.lexicon))
-            # ..
+            pp_high = model1.perplexity(corpus_reader(os.path.join(testdir2, f), model1.lexicon))
+            pp_low = model2.perplexity(corpus_reader(os.path.join(testdir2, f), model2.lexicon))
 
-        return 0.0
+            if pp_low < pp_high:
+                correct = correct + 1
+
+            total = total + 1
+
+        print(correct1)
+        print(total1)
+
+        print(correct - correct1)
+        print(total - total1)
+
+        return correct / total
 
 if __name__ == "__main__":
 

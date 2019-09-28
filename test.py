@@ -1,11 +1,12 @@
 import pytest
 import trigram_model
+import time
 from helper import Helper, start_token, stop_token, unk_token
 
 
 @pytest.fixture
 def trigram_model_brown_train():
-    # print()
+    print()
     return trigram_model.TrigramModel('hw1_data/brown_train.txt')
 
 
@@ -64,9 +65,36 @@ def trigram_model_brown_train():
 #
 #
 # TESTED
-def test_perplexity(trigram_model_brown_train):
-    test_perplexity = trigram_model_brown_train.perplexity('hw1_data/brown_test.txt')
-    print(test_perplexity)
-    assert test_perplexity < 400.0
+# def test_perplexity(trigram_model_brown_train):
+#     start = time.time()
+#
+#     test_perplexity = trigram_model_brown_train.perplexity(trigram_model.corpus_reader('hw1_data/brown_test.txt', trigram_model_brown_train.lexicon))
+#     print(test_perplexity)
+#     assert test_perplexity < 400.0
+#
+#     print('Seconds elapsed: ')
+#     print(time.time() - start)
+#
+#
+# # TESTED
 # def test_perplexity_train(trigram_model_brown_train):
-#     assert trigram_model_brown_train.perplexity('hw1_data/brown_train.txt') < 400.0
+#     start = time.time()
+#
+#     test_perplexity = trigram_model_brown_train.perplexity('hw1_data/brown_train.txt')
+#     print(test_perplexity)
+#     assert test_perplexity < 400.0
+#
+#     print('Seconds elapsed: ')
+#     print(time.time() - start)
+
+
+# WRONG
+def test_essay_scoring(trigram_model_brown_train):
+    start = time.time()
+
+    accuracy = trigram_model.essay_scoring_experiment('hw1_data/ets_toefl_data/train_high.txt', 'hw1_data/ets_toefl_data/train_low.txt', 'hw1_data/ets_toefl_data/test_high', 'hw1_data/ets_toefl_data/test_low')
+    print(accuracy)
+    assert accuracy > 0.8
+
+    print('Seconds elapsed: ')
+    print(time.time() - start)
