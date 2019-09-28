@@ -119,14 +119,14 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) trigram probability
         """
 
-        denominator = self.bigramcounts(trigram[1:3])
+        denominator = self.bigramcounts[trigram[0:2]]
 
         # If the denominator is zero, just return zero
         # Think of this as if p(b,c)=0, then p(a|b,c) should also be zero
         if denominator == 0:
             return 0
 
-        return self.trigramcounts(trigram) / denominator
+        return self.trigramcounts[trigram] / denominator
 
 
     def raw_bigram_probability(self, bigram):
@@ -135,14 +135,14 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) bigram probability
         """
 
-        denominator = self.unigramcounts(bigram[1])
+        denominator = self.unigramcounts[bigram[0]]
 
         # If the denominator is zero, just return zero
         # Think of this as if p(b)=0, then p(a|b) should also be zero
         if denominator == 0:
             return 0
 
-        return self.bigramcounts(bigram) / denominator
+        return self.bigramcounts[bigram] / denominator
 
 
     def raw_unigram_probability(self, unigram):
@@ -152,24 +152,31 @@ class TrigramModel(object):
         """
 
         # The denominator is always greater than zero, NaN is not a possibility
-        return self.unigramcounts(unigram) / self.total_words
+        return self.unigramcounts[unigram] / self.total_words
 
-
+    # Generate trigram probability for every trigram that starts with a given bigram
     def generate_trigram_probability_distribution(self, given_bigram):
         word_list = []
         trigram_prob_dist = []
+        # Ask TA is it OK if prob sums to let say 1.000000000000061 instead of 1
+        # Maybe this relates to rounding
 
         for trigram in self.trigramcounts:
             if trigram[2] != 'START' and given_bigram == trigram[0:2]:
                 word_list.append(trigram[2])
-                trigram_prob_dist.append(self.trigramcounts[trigram] / self.bigramcounts[given_bigram])
+                # print(type(trigram))
+                # print(len(trigram))
+                # print(trigram)
+                trigram_prob_dist.append(self.raw_trigram_probability(trigram))
+                # trigram_prob_dist.append(self.trigramcounts[trigram] / self.bigramcounts[given_bigram])
 
-        # Ask TA why this sums to 1.000000000000061 instead of 1 for ('START', 'START')
-        # Maybe this relates to rounding, if it is, is it okay?
+        # Size of returned list can vary
+        # For example, if size=6, that means there are only 6 words in the corpus
+        # that come after the given bigram
         return word_list, trigram_prob_dist
 
 
-    def generate_sentence(self, t=20):
+    def generate_sentence(self, t=20, debug=False):
         """
         COMPLETE THIS METHOD (OPTIONAL)
         Generate a random sentence from the trigram model. t specifies the
@@ -179,12 +186,32 @@ class TrigramModel(object):
         produced_words = []
 
         for i in range(0, t):
+             # Get possible words and their probability
              word_list, trigram_prob_dist = self.generate_trigram_probability_distribution(tuple(bigram))
-             exp_prob_dist = np.random.multinomial(10, trigram_prob_dist, size=1)
-             idx = np.argmin(exp_prob_dist)
-             word = word_list[idx]
+             if debug and len(word_list) < 20:
+                 print('Observed bigram: ' + str(tuple(bigram)))
+                 print('Word list: ' + str(tuple(word_list)))
 
+             exp_prob_dist = np.random.multinomial(10, trigram_prob_dist)
+             # This will return a list with the same size as trigram_prob_dist
+             # Every element denotes how many times the word in that index
+             # occurs in the experiment (10 times random sampling with replacement)
+             # All elements of the list sum to 10
+             if debug and len(word_list) < 20:
+                 print('------')
+                 print(exp_prob_dist)
+                 print('------')
+
+             # Find index with biggest occurence
+             idx = np.argmax(exp_prob_dist)
+             # Get the actual word
+             word = word_list[idx]
+             if debug and len(word_list) < 20:
+                 print('Chosen word: ' + word)
+
+             # Append word to the solution
              produced_words.append(word)
+             # Shift bigram
              bigram[0] = bigram[1]
              bigram[1] = word
 
