@@ -30,12 +30,15 @@ def trigram_model_brown_train():
 #     # print(trigram_model_brown_train.raw_bigram_probability((start_token, 'the')))
 #     # print(trigram_model_brown_train.raw_trigram_probability((start_token, start_token, 'the')))
 #     assert trigram_model_brown_train.raw_trigram_probability((start_token, start_token, 'the',)) == trigram_model_brown_train.raw_bigram_probability((start_token, 'the',))
-# TESTED
-def test_sentence_prob(trigram_model_brown_train):
-    # print(trigram_model_brown_train.raw_unigram_probability((start_token,)))
-    # print(trigram_model_brown_train.raw_bigram_probability((start_token, 'the')))
-    # print(trigram_model_brown_train.raw_trigram_probability((start_token, start_token, 'the')))
-    assert trigram_model_brown_train.sentence_logprob(['the', 'blade', 'came', 'out', 'with', 'a', 'snick', '!']) > 0
+#
+#
+# # TESTED
+# def test_sentence_prob(trigram_model_brown_train):
+#     # print(trigram_model_brown_train.raw_unigram_probability((start_token,)))
+#     # print(trigram_model_brown_train.raw_bigram_probability((start_token, 'the')))
+#     # print(trigram_model_brown_train.raw_trigram_probability((start_token, start_token, 'the')))
+#     # In this case, prob ('with', 'a', 'snick',) == 0 because 'snick' should be 'UNK'
+#     assert trigram_model_brown_train.sentence_logprob(['the', 'blade', 'came', 'out', 'with', 'a', 'snick', '!']) == 0
 #
 #
 # # TESTED
@@ -60,9 +63,10 @@ def test_sentence_prob(trigram_model_brown_train):
 #         assert random_sentence_2[len(random_sentence_2)-1] == stop_token
 #
 #
-# # WRONG
-# def test_perplexity(trigram_model_brown_train):
-#     assert trigram_model_brown_train.perplexity('hw1_data/brown_test.txt') < 400.0
-
+# TESTED
+def test_perplexity(trigram_model_brown_train):
+    test_perplexity = trigram_model_brown_train.perplexity('hw1_data/brown_test.txt')
+    print(test_perplexity)
+    assert test_perplexity < 400.0
 # def test_perplexity_train(trigram_model_brown_train):
 #     assert trigram_model_brown_train.perplexity('hw1_data/brown_train.txt') < 400.0

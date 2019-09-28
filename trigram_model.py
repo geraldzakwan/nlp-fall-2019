@@ -169,9 +169,9 @@ class TrigramModel(object):
         if denominator == 0:
             return 0
 
-        print(bigram)
-        print(self.bigramcounts[bigram])
-        print(denominator)
+        # print(bigram)
+        # print(self.bigramcounts[bigram])
+        # print(denominator)
 
         return self.bigramcounts[bigram] / denominator
 
@@ -186,9 +186,9 @@ class TrigramModel(object):
         if not Helper.is_valid_n_grams(unigram, 1):
             raise Exception
 
-        print(unigram)
-        print(self.unigramcounts[unigram])
-        print(self.total_words)
+        # print(unigram)
+        # print(self.unigramcounts[unigram])
+        # print(self.total_words)
 
         # The denominator is always greater than zero, NaN is not a possibility
         return self.unigramcounts[unigram] / self.total_words
@@ -263,19 +263,22 @@ class TrigramModel(object):
         Returns the smoothed trigram probability (using linear interpolation).
         """
 
+        # Question to TA: Do we need to preprocess sentence to replace
+        # OOV words with 'UNK'
+
         lambda1 = 1/3.0
         lambda2 = 1/3.0
         lambda3 = 1/3.0
 
-        print('trigram prob')
         trigram_probability = lambda1*self.raw_trigram_probability(trigram)
-        print(trigram_probability)
-        print('bigram prob')
+        # print('trigram prob')
+        # print(trigram_probability)
         bigram_probability = lambda2*self.raw_bigram_probability(trigram[1:3])
-        print(bigram_probability)
-        print('unigram prob')
+        # print('bigram prob')
+        # print(bigram_probability)
         unigram_probability = lambda3*self.raw_unigram_probability((trigram[2],))
-        print(unigram_probability)
+        # print('unigram prob')
+        # print(unigram_probability)
 
         return trigram_probability + bigram_probability + unigram_probability
 
@@ -285,11 +288,13 @@ class TrigramModel(object):
         Returns the log probability of an entire sequence.
         """
 
+        # Question to TA: Do we need to preprocess sentence to replace
+        # OOV words with 'UNK'
         print(sentence)
 
         log_probs_sum = 0.0
         for trigram in get_ngrams(sentence, 3):
-            print(trigram)
+            # print(trigram)
             log_prob = self.smoothed_trigram_probability(trigram)
 
             print('total trigram prob')
@@ -298,10 +303,12 @@ class TrigramModel(object):
             if log_prob == 0:
                 # Question to TA: How should we compute sentence_logprob if there is zero prob
                 print('This trigram has zero probs: ' + str(trigram))
-                # raise Exception
+                raise Exception
                 # return float("-inf")
-                log_probs_sum -= 1000
+                # log_probs_sum -= 1000
+                return -1000
             else:
+                print(math.log2(log_prob))
                 log_probs_sum += math.log2(log_prob)
 
         print('total sentence prob')
@@ -318,6 +325,7 @@ class TrigramModel(object):
         l = 0.0
 
         # Question to TA: We always use training lexicon right???
+        # Question to TA: We always use prob. from training data right???
         iter = 0
         generator = corpus_reader(corpus, self.lexicon)
         for sentence in generator:
@@ -338,7 +346,8 @@ class TrigramModel(object):
 
         print(l)
         print(corpus_total_words)
-        return (2 ** ((-1)*l)) / corpus_total_words
+        l = l / corpus_total_words
+        return 2 ** ((-1)*l)
 
 
 def essay_scoring_experiment(training_file1, training_file2, testdir1, testdir2):
