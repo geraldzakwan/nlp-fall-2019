@@ -88,8 +88,13 @@ class TrigramModel(object):
         generator = corpus_reader(corpusfile, self.lexicon)
         self.count_ngrams(generator)
 
+        # Question to TA:
+        # 1. Do we exclude 'START' and 'STOP' when calculating the total number of words for unigram probability
+        # 2. Do we exclude 'START' and 'STOP' when calculating the total number of words (M) for perplexity
+
         # For the total number of words, 'START' and 'STOP' are excluded
         self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {start_token, stop_token})
+        # self.total_words_for_perplexity = ???
         self.total_bigrams = sum(self.bigramcounts.values())
         self.total_trigrams = sum(self.trigramcounts.values())
 
@@ -250,7 +255,7 @@ class TrigramModel(object):
         lambda2 = 1/3.0
         lambda3 = 1/3.0
 
-        return lambda1*self.raw_trigram_probability(trigram) + lambda2*self.raw_bigram_probability(trigram[1:3]) + lambda2*self.raw_unigram_probability((trigram[2],))
+        return lambda1*self.raw_trigram_probability(trigram) + lambda2*self.raw_bigram_probability(trigram[1:3]) + lambda3*self.raw_unigram_probability((trigram[2],))
 
     def sentence_logprob(self, sentence):
         """
@@ -260,12 +265,15 @@ class TrigramModel(object):
 
         log_probs_sum = 0.0
         for trigram in get_ngrams(sentence, 3):
-            log_prob = smoothed_trigram_probability(trigram)
-            if prob == 0:
-                print('This trigram has zero probs: ' + str(trigram))
-                return float("-inf")
+            log_prob = self.smoothed_trigram_probability(trigram)
 
-            log_probs += math.log2(log_prob)
+            if log_prob == 0:
+                # Question to TA: How should we compute sentence_logprob if there is zero prob
+                print('This trigram has zero probs: ' + str(trigram))
+                raise Exception
+                # return float("-inf")
+
+            log_probs_sum += math.log2(log_prob)
 
         return log_probs_sum
 
@@ -274,7 +282,26 @@ class TrigramModel(object):
         COMPLETE THIS METHOD (PART 6)
         Returns the log probability of an entire sequence.
         """
-        return float("inf")
+
+        corpus_unigram_counts = defaultdict(int)
+        l = 0.0
+
+        # Question to TA: We always use training lexicon right???
+        generator = corpus_reader(corpus, self.lexicon)
+        for sentence in generator:
+            for unigram in get_ngrams(sentence, 1):
+                corpus_unigram_counts[unigram] += 1
+
+            log_prob = self.sentence_logprob(sentence)
+            l += log_prob
+
+        # Question to TA: Do we exclude 'START' and 'STOP' when calculating total words for perplexity
+        corpus_total_words = sum(count for word, count in corpus_unigram_counts.items() if word not in {start_token, stop_token})
+        # corpus_total_words = sum(corpus_unigram_counts.values())
+
+        print(l)
+        print(corpus_total_words)
+        # return (2 ** ((-1)*l)) / corpus_total_words
 
 
 def essay_scoring_experiment(training_file1, training_file2, testdir1, testdir2):
