@@ -127,9 +127,8 @@ class TrigramModel(object):
         # For the total number of words, 'START' and 'STOP' are excluded ???
         # TA Sujay says that he would prefer to count 'STOP' for unigram, but not 'START'
         # We can define our assumption in README.txt or something
-        # self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {start_token, stop_token})
-        self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {(start_token,), (stop_token,)})
-        # self.total_words = sum(self.unigramcounts.values())
+        # self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {(start_token,), (stop_token,)})
+        self.total_words = sum(self.unigramcounts.values())
         # self.total_words_for_perplexity = ???
         self.total_bigrams = sum(self.bigramcounts.values())
         self.total_trigrams = sum(self.trigramcounts.values())
@@ -373,9 +372,9 @@ class TrigramModel(object):
 
         # Question to TA: Do we exclude 'START' and 'STOP' when calculating total words for perplexity?
         # If both are included, for brown test, this would yield 300ish perplexity
-        # corpus_total_words = sum(corpus_unigram_counts.values())
+        corpus_total_words = sum(corpus_unigram_counts.values())
         # If both are excluded, for brown test, this would yield 170ish perplexity
-        corpus_total_words = sum(count for word, count in corpus_unigram_counts.items() if word not in {(start_token,), (stop_token,)})
+        # corpus_total_words = sum(count for word, count in corpus_unigram_counts.items() if word not in {(start_token,), (stop_token,)})
 
         # print(l)
         # print(corpus_total_words)
