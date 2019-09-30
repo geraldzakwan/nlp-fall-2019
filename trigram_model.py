@@ -6,7 +6,6 @@ import numpy as np
 import os
 import os.path
 from copy import copy
-from helper import Helper, start_token, stop_token, unk_token
 
 
 """
@@ -14,6 +13,35 @@ COMS W4705 - Natural Language Processing - Fall 2019
 Homework 1 - Programming Component: Trigram Language Models
 Yassine Benajiba
 """
+
+start_token = 'START'
+stop_token = 'STOP'
+unk_token = 'UNK'
+
+def is_empty(list_of_dict):
+    if list_of_dict is None:
+        return True
+
+    if len(list_of_dict) == 0:
+        return True
+
+    return False
+
+
+def is_valid_n_grams(n_grams, n):
+    if n_grams is None:
+        return False
+
+    if len(n_grams) == 0:
+        return False
+
+    if not isinstance(n_grams, tuple):
+        return False
+
+    if len(n_grams) != n:
+        return False
+
+    return True
 
 
 def corpus_reader(corpusfile, lexicon=None):
@@ -50,10 +78,10 @@ def get_ngrams(sequence, n):
     This should work for arbitrary values of 1 <= n < len(sequence).
     """
 
-    if Helper.is_empty(sequence):
+    if is_empty(sequence):
         return []
 
-    # I don't want the value of sequence changes for some reason
+    # I don't want the value of the original sequence changes
     sequence_copy = copy(sequence)
 
     if n == 1:
@@ -136,7 +164,7 @@ class TrigramModel(object):
         """
 
         # Tricky thing is to make sure param is always in the form of tuple
-        if not Helper.is_valid_n_grams(trigram, 3):
+        if not is_valid_n_grams(trigram, 3):
             raise Exception
 
         denominator = self.bigramcounts[trigram[0:2]]
@@ -163,7 +191,7 @@ class TrigramModel(object):
         """
 
         # Tricky thing is to make sure param is always in the form of tuple
-        if not Helper.is_valid_n_grams(bigram, 2):
+        if not is_valid_n_grams(bigram, 2):
             raise Exception
 
         denominator = self.unigramcounts[(bigram[0],)]
@@ -187,7 +215,7 @@ class TrigramModel(object):
         """
 
         # Tricky thing is to make sure param is always in the form of tuple
-        if not Helper.is_valid_n_grams(unigram, 1):
+        if not is_valid_n_grams(unigram, 1):
             raise Exception
 
         # print(unigram)
@@ -215,7 +243,7 @@ class TrigramModel(object):
         return word_list, trigram_prob_dist
 
 
-    def generate_sentence(self, t=20, debug=False):
+    def generate_sentence(self, t=20):
         """
         COMPLETE THIS METHOD (OPTIONAL)
         Generate a random sentence from the trigram model. t specifies the
@@ -228,7 +256,7 @@ class TrigramModel(object):
         for i in range(0, t):
              # Get possible words and their probability
              word_list, trigram_prob_dist = self.generate_trigram_probability_distribution(tuple(bigram))
-             if debug and len(word_list) < 20:
+             if len(word_list) < t:
                  print('Observed bigram: ' + str(tuple(bigram)))
                  print('Word list: ' + str(tuple(word_list)))
 
@@ -237,7 +265,7 @@ class TrigramModel(object):
              # Every element denotes how many times the word in that index
              # occurs in the experiment (10 times random sampling with replacement)
              # All elements of the list sum to 10
-             if debug and len(word_list) < 20:
+             if len(word_list) < t:
                  print('----------')
                  print(exp_prob_dist)
                  print('----------')
@@ -246,7 +274,7 @@ class TrigramModel(object):
              idx = np.argmax(exp_prob_dist)
              # Get the actual word
              word = word_list[idx]
-             if debug and len(word_list) < 20:
+             if len(word_list) < t:
                  print('Chosen word: ' + word)
 
              # Append word to the solution
@@ -335,9 +363,6 @@ class TrigramModel(object):
         # generator = corpus_reader(corpus, self.lexicon)
         # for sentence in generator:
         for sentence in corpus:
-            # if iter == 1:
-            #     break
-
             for unigram in get_ngrams(sentence, 1):
                 corpus_unigram_counts[unigram] += 1
 

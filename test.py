@@ -1,7 +1,7 @@
 import pytest
 import trigram_model
 import time
-from helper import Helper, start_token, stop_token, unk_token
+from trigram_model import start_token, stop_token, unk_token
 
 
 @pytest.fixture
@@ -38,8 +38,9 @@ def test_sentence_prob(trigram_model_brown_train):
     # print(trigram_model_brown_train.raw_unigram_probability((start_token,)))
     # print(trigram_model_brown_train.raw_bigram_probability((start_token, 'the')))
     # print(trigram_model_brown_train.raw_trigram_probability((start_token, start_token, 'the')))
-    # In this case, prob ('with', 'a', 'snick',) == 0 because 'snick' should be 'UNK'
-    assert trigram_model_brown_train.sentence_logprob(['the', 'blade', 'came', 'out', 'with', 'a', 'snick', '!']) == 0
+    # In this case, prob ('with', 'a', 'snick',) will cause division by zero because and log0 is undefined
+    with pytest.raises(Exception):
+        trigram_model_brown_train.sentence_logprob(['the', 'blade', 'came', 'out', 'with', 'a', 'snick', '!'])
 
 
 # TESTED
@@ -80,7 +81,7 @@ def test_perplexity(trigram_model_brown_train):
 def test_perplexity_train(trigram_model_brown_train):
     start = time.time()
 
-    test_perplexity = trigram_model_brown_train.perplexity('hw1_data/brown_train.txt')
+    test_perplexity = trigram_model_brown_train.perplexity(trigram_model.corpus_reader('hw1_data/brown_train.txt', trigram_model_brown_train.lexicon))
     print(test_perplexity)
     assert test_perplexity < 400.0
 
