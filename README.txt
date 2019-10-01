@@ -42,4 +42,4 @@ probability of anything is the first word. Reference: https://piazza.com/class/k
 to conduct sampling experiment as suggested by one of the TA here: https://piazza.com/class/k09vvrvx2l846o?cid=35.
 The rest of the logic is explained in the comments inside the function.
 
-5. I include my test cases under the commented main function
+5. I include my test cases under the commented main function.

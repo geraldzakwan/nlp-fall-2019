@@ -51,7 +51,7 @@ def corpus_reader(corpusfile, lexicon=None):
             if line.strip():
                 sequence = line.lower().strip().split()
                 if lexicon:
-                    yield [word if word in lexicon else unk_token for word in sequence]
+                    yield [word if word in lexicon else "UNK" for word in sequence]
                 else:
                     yield sequence
 
@@ -105,9 +105,9 @@ class TrigramModel(object):
         # Iterate through the corpus once to to build a lexicon
         generator = corpus_reader(corpusfile)
         self.lexicon = get_lexicon(generator)
-        self.lexicon.add(unk_token)
-        self.lexicon.add(start_token)
-        self.lexicon.add(stop_token)
+        self.lexicon.add("UNK")
+        self.lexicon.add("START")
+        self.lexicon.add("STOP")
 
         # Now iterate through the corpus again and count ngrams
         generator = corpus_reader(corpusfile, self.lexicon)
@@ -264,9 +264,6 @@ class TrigramModel(object):
         Returns the smoothed trigram probability (using linear interpolation).
         """
 
-        # Question to TA: Do we need to preprocess sentence to replace
-        # OOV words with 'UNK'
-
         lambda1 = 1/3.0
         lambda2 = 1/3.0
         lambda3 = 1/3.0
@@ -283,16 +280,15 @@ class TrigramModel(object):
         Returns the log probability of an entire sequence.
         """
 
-        # Question to TA: Do we need to preprocess sentence to replace
-        # OOV words with 'UNK'
-
         log_probs_sum = 0.0
         for trigram in get_ngrams(sentence, 3):
             log_prob = self.smoothed_trigram_probability(trigram)
 
             if log_prob == 0:
-                # Question to TA: How should we compute sentence_logprob if there is zero prob
-                # I assume we just return minus infinity
+                # If at least one smoothed_trigram_probability equals zero,
+                # I assume I just return minus infinity
+                # But, this case won't happen when counting perplexity because
+                # corpus_reader function will replace all OOV words with 'UNK'
                 print('This trigram has zero probs even after smoothing: ' + str(trigram))
                 return float('-inf')
             else:
