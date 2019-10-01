@@ -357,7 +357,7 @@ def essay_scoring_experiment(training_file1, training_file2, testdir1, testdir2)
 
         return correct / total
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Loading model
     data_dir = 'hw1_data/'
     if len(sys.argv) > 1:
@@ -371,14 +371,14 @@ if __name__ == "__main__":
     assert get_ngrams(['natural', 'language', 'processing'], 2) == [(start_token, 'natural',), ('natural', 'language',), ('language', 'processing',), ('processing', stop_token,)]
     assert get_ngrams(['natural', 'language', 'processing'], 3) == [(start_token, start_token, 'natural',), (start_token, 'natural', 'language',), ('natural','language', 'processing',), ('language', 'processing', stop_token,)]
 
-    # Test count ngrams
+    # Test count_ngrams
     assert model.unigramcounts[(start_token,)] == 41614
     assert model.unigramcounts[(start_token,)] == model.unigramcounts[(stop_token,)]
     assert model.unigramcounts[('the',)] == 61428
     assert model.bigramcounts[(start_token, 'the',)] == 5478
     assert model.trigramcounts[(start_token, start_token, 'the',)] == 5478
 
-    # Test raw probabilities
+    # Test raw_uni/bi/trigram_probability
     assert model.raw_unigram_probability(('the',)) == 61428/1084179
     assert model.raw_bigram_probability(('the', 'jury',)) == 35/61428
     assert model.raw_trigram_probability(('the', 'jury', 'said',)) == 7/35
@@ -400,7 +400,16 @@ if __name__ == "__main__":
     assert model.smoothed_trigram_probability(('the', 'jury', 'casdajnkuakk',)) == 0 # All trigram, bigram and unigram are not found
 
     # Test sentence_logprob
-    assert model.sentence_logprob(['the', 'jury', 'said', 'casdajnkuakk']) == float('-inf')
+    assert model.sentence_logprob(['the', 'verdict', 'came', 'three', 'hours', 'later']) == sum([
+            math.log2(model.smoothed_trigram_probability((start_token, start_token, 'the',))),
+            math.log2(model.smoothed_trigram_probability((start_token, 'the', 'verdict',))),
+            math.log2(model.smoothed_trigram_probability(('the', 'verdict', 'came',))),
+            math.log2(model.smoothed_trigram_probability(('verdict', 'came', 'three',))),
+            math.log2(model.smoothed_trigram_probability(('came', 'three', 'hours',))),
+            math.log2(model.smoothed_trigram_probability(('three', 'hours', 'later',))),
+            math.log2(model.smoothed_trigram_probability(('hours', 'later', stop_token,)))
+        ])
+    assert model.sentence_logprob(['the', 'jury', 'said', 'casdajnkuakk']) == float('-inf') # the last two trigrams will have smoothed_trigram_probability of zero
 
     # Test perplexity
     if len(sys.argv) > 2:

@@ -1,20 +1,20 @@
-Some assumptions / design decisions that I made for this assignment:
+Some assumptions/design decisions that I made for this assignment:
 
 1. 'START' and 'STOP' tokens are listed in the vocabulary and count towards the total words.
-This is as clarified by Prof. Benajiba in the email. This assumption have some effects:
+This is as clarified by Prof. Benajiba in the email and in https://piazza.com/class/k09vvrvx2l846o?cid=72.
+This design have some effects:
 
   a. raw_unigram_probability becomes smaller for every word since the total words increase
-  Reference: https://piazza.com/class/k09vvrvx2l846o?cid=72
 
   b. perplexity becomes smaller, 2^(-l/M) will go smaller as M (the total words) get higher.
 
     - Perplexity for brown_test
-    If 'START' and 'STOP' are counted, my result is 173.5
-    Without counting them, the perplexity is 300-ish.
+    If 'START' and 'STOP' are counted, my result is 173.51
+    Without counting them, the perplexity is 300.18
 
     - Perplexity for brown_train
-    If 'START' and 'STOP' are counted, my result is 14.5
-    Without counting them, the perplexity is 300-ish.
+    If 'START' and 'STOP' are counted, my result is 14.49
+    Without counting them, the perplexity is 18.03
 
     Those values seem fine according to https://piazza.com/class/k09vvrvx2l846o?cid=81
 
@@ -35,7 +35,9 @@ probability of anything is the first word. Reference: https://piazza.com/class/k
    that has smoothed_trigram_probability equals zero, the function will return float('-inf').
 
    d. However, when computing perplexity, OOV words will all be replaced by 'UNK'. This is done by
-   corpus_reader function. Hence, the case of smoothed_trigram_probability equals zero thus making
-   sentence_logprob return float("-inf") won't happen.
+   corpus_reader function. Hence, all the cases above won't happen. That is, smoothed_trigram_probability
+   will never be equal to zero thus making sentence_logprob will never return float('-inf').
 
-4. I implement the generate_sentence function. The logic is explained in the comments inside the function.
+4. I implement the generate_sentence (optional) function. I use numpy library, particularly numpy.random.multinomial,
+to conduct sampling experiment as suggested by one of the TA here: https://piazza.com/class/k09vvrvx2l846o?cid=35.
+The rest of the logic is explained in the comments inside the function.
