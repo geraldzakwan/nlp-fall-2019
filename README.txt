@@ -1,24 +1,41 @@
 Some assumptions / design decisions that I made for this assignment:
 
-KEY DISCUSSIONS FOR OOV/UNK:
-https://piazza.com/class/k09vvrvx2l846o?cid=48
-Basically: for raw probability, fuck UNK -> simply return 0
-We then use the smoothed_trigram_probability to "smoothen" it
+1. 'START' and 'STOP' tokens are listed in the vocabulary and count towards the total words.
+This is as clarified by Prof. Benajiba in the email. This assumption have some effects:
 
-- For these functions: (a, b, c, d)
-  1. For param=x, every OOV word will always be replace by 'UNK'. Thus, when counting the probability,
-  there wouldn't be a case where the denominator is zero. This is the default for my implementation.
-  2. For param=y, every OOV word will stay as it is. Thus, when counting the probability,
-  there would be a case where the denominator is zero.
+  a. raw_unigram_probability becomes smaller for every word since the total words increase
+  Reference: https://piazza.com/class/k09vvrvx2l846o?cid=72
 
-- For raw_unigram_probability, the total number of words:
-  1. Exclude start and stop, why? Reference: https://piazza.com/class/k09vvrvx2l846o?cid=30 (Evan Lander)
-  https://piazza.com/class/k09vvrvx2l846o?cid=44 (Evan Lander)
+  b. perplexity becomes smaller, 2^(-l/M) will go smaller as M (the total words) get higher.
 
-- Special case, probability of ('START', 'START', 'the',): https://piazza.com/class/k09vvrvx2l846o?cid=32
+    - Perplexity for brown_test
+    If 'START' and 'STOP' are counted, my result is 173.5
+    Without counting them, the perplexity is 300-ish.
 
-- For perplexity, the total number of words:
-  1. Exclude start and stop, why? The default. Reference: https://piazza.com/class/k09vvrvx2l846o?cid=36
-  https://piazza.com/class/k09vvrvx2l846o?cid=43
-  2. Result when exclude
-  3. Result when include?
+    - Perplexity for brown_train
+    If 'START' and 'STOP' are counted, my result is 14.5
+    Without counting them, the perplexity is 300-ish.
+
+    Those values seem fine according to https://piazza.com/class/k09vvrvx2l846o?cid=81
+
+2. P('START', 'START', anything,) is equal to P('START', anything,) as both denote the same meaning:
+probability of anything is the first word. Reference: https://piazza.com/class/k09vvrvx2l846o?cid=32
+
+3. Out of vocabulary words handling:
+
+   a. For raw_uni/bi/trigram_probability functions, I don't replace OOV words with 'UNK' because it is
+   meant to be 'raw'. I just return zero if either the numerator or denominator is zero (or both).
+   Reference: https://piazza.com/class/k09vvrvx2l846o?cid=18, https://piazza.com/class/k09vvrvx2l846o?cid=48
+
+   b. For smoothed_trigram_probability, I also don't replace OOV words with 'UNK'. The reason is that
+   linear interpolation should only account for unseen trigram and not unseen unigram. If an unseen word appears
+   as the last element of the trigram, e.g. ('the', 'jury', unseen), the smoothed_trigram_probability will be zero.
+
+   c. For sentence_logprob, I don't replace OOV words with 'UNK' as well. If there is at least one trigram
+   that has smoothed_trigram_probability equals zero, the function will return float('-inf').
+
+   d. However, when computing perplexity, OOV words will all be replaced by 'UNK'. This is done by
+   corpus_reader function. Hence, the case of smoothed_trigram_probability equals zero thus making
+   sentence_logprob return float("-inf") won't happen.
+
+4. I implement the generate_sentence function. The logic is explained in the comments inside the function.

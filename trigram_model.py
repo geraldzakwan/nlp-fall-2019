@@ -14,6 +14,7 @@ Homework 1 - Programming Component: Trigram Language Models
 Yassine Benajiba
 """
 
+# Change token to constant for readibility
 start_token = 'START'
 stop_token = 'STOP'
 unk_token = 'UNK'
@@ -53,14 +54,6 @@ def corpus_reader(corpusfile, lexicon=None):
                     yield [word if word in lexicon else unk_token for word in sequence]
                 else:
                     yield sequence
-
-
-# def count_words_and_get_lexicon(corpus):
-#     word_counts = defaultdict(int)
-#     for sentence in corpus:
-#         for word in sentence:
-#             word_counts[word] += 1
-#     return (sum(word_counts.values()), set(word for word in word_counts if word_counts[word] > 1))
 
 
 def get_lexicon(corpus):
@@ -120,16 +113,10 @@ class TrigramModel(object):
         generator = corpus_reader(corpusfile, self.lexicon)
         self.count_ngrams(generator)
 
-        # Question to TA:
-        # 1. Do we exclude 'START' and 'STOP' when calculating the total number of words for unigram probability
-        # 2. Do we exclude 'START' and 'STOP' when calculating the total number of words (M) for perplexity
-
-        # For the total number of words, 'START' and 'STOP' are excluded ???
-        # TA Sujay says that he would prefer to count 'STOP' for unigram, but not 'START'
-        # We can define our assumption in README.txt or something
-        # self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {(start_token,), (stop_token,)})
+        # As clarified by Prof. Benajiba, 'START' and 'STOP' tokens count towards the total number of words
         self.total_words = sum(self.unigramcounts.values())
-        # self.total_words_for_perplexity = ???
+        # If not, it should be something like:
+        # self.total_words = sum(count for word, count in self.unigramcounts.items() if word not in {(start_token,), (stop_token,)})
         self.total_bigrams = sum(self.bigramcounts.values())
         self.total_trigrams = sum(self.trigramcounts.values())
 
@@ -162,12 +149,13 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) trigram probability
         """
 
-        # Tricky thing is to make sure param is always in the form of tuple
+        # Make sure param is always in the form of tuple of string of size 3
         if not is_valid_n_grams(trigram, 3):
             raise Exception
 
         denominator = self.bigramcounts[trigram[0:2]]
-        # If the denominator is zero, just return zero
+
+        # If the denominator is zero (no such bigram), just return zero
         # Think of this as if p(b,c)=0, then p(a|b,c) should also be zero
         if denominator == 0:
             # Special case for ('START', 'START', 'someword',)
@@ -176,8 +164,7 @@ class TrigramModel(object):
             # appears as the first word in a sentence
             if trigram[0:2] == (start_token, start_token,):
                 return self.raw_bigram_probability((start_token, trigram[2]))
-            # But somehow, we don't need this as we always append
-            # two start tokens to the sentence before calculating trigram
+
             return 0
 
         return self.trigramcounts[trigram] / denominator
@@ -189,20 +176,16 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) bigram probability
         """
 
-        # Tricky thing is to make sure param is always in the form of tuple
+        # Make sure param is always in the form of tuple of string of size 2
         if not is_valid_n_grams(bigram, 2):
             raise Exception
 
         denominator = self.unigramcounts[(bigram[0],)]
 
-        # If the denominator is zero, just return zero
+        # If the denominator is zero (no such unigram), just return zero
         # Think of this as if p(b)=0, then p(a|b) should also be zero
         if denominator == 0:
             return 0
-
-        # print(bigram)
-        # print(self.bigramcounts[bigram])
-        # print(denominator)
 
         return self.bigramcounts[bigram] / denominator
 
@@ -213,23 +196,18 @@ class TrigramModel(object):
         Returns the raw (unsmoothed) unigram probability.
         """
 
-        # Tricky thing is to make sure param is always in the form of tuple
+        # Make sure param is always in the form of tuple of string of size 1
         if not is_valid_n_grams(unigram, 1):
             raise Exception
-
-        # print(unigram)
-        # print(self.unigramcounts[unigram])
-        # print(self.total_words)
 
         # The denominator is always greater than zero, NaN is not a possibility
         return self.unigramcounts[unigram] / self.total_words
 
-    # Generate trigram probability for every trigram that starts with a given bigram
+    # Generate trigram probability for every trigram that starts with a certain bigram
+    # This is a helper function for generate_sentence
     def generate_trigram_probability_distribution(self, given_bigram):
         word_list = []
         trigram_prob_dist = []
-        # Ask TA is it OK if prob sums to let say 1.000000000000061 instead of 1
-        # Maybe this relates to rounding
 
         for trigram in self.trigramcounts:
             if trigram[2] != start_token and given_bigram == trigram[0:2]:
@@ -237,8 +215,8 @@ class TrigramModel(object):
                 trigram_prob_dist.append(self.raw_trigram_probability(trigram))
 
         # Size of returned list can vary
-        # For example, if size=6, that means there are only 6 words in the corpus
-        # that come after the given bigram
+        # For example, if size=6, that means there are only 6 words
+        # in the corpus that appear after the given bigram
         return word_list, trigram_prob_dist
 
 
@@ -255,26 +233,17 @@ class TrigramModel(object):
         for i in range(0, t):
              # Get possible words and their probability
              word_list, trigram_prob_dist = self.generate_trigram_probability_distribution(tuple(bigram))
-             if len(word_list) < t:
-                 print('Observed bigram: ' + str(tuple(bigram)))
-                 print('Word list: ' + str(tuple(word_list)))
 
              exp_prob_dist = np.random.multinomial(10, trigram_prob_dist)
              # This will return a list with the same size as trigram_prob_dist
              # Every element denotes how many times the word in that index
              # occurs in the experiment (10 times random sampling with replacement)
              # All elements of the list sum to 10
-             if len(word_list) < t:
-                 print('----------')
-                 print(exp_prob_dist)
-                 print('----------')
 
-             # Find index with biggest occurence
+             # Find index with the most occurences
              idx = np.argmax(exp_prob_dist)
              # Get the actual word
              word = word_list[idx]
-             if len(word_list) < t:
-                 print('Chosen word: ' + word)
 
              # Append word to the solution
              produced_words.append(word)
@@ -282,6 +251,7 @@ class TrigramModel(object):
              bigram[0] = bigram[1]
              bigram[1] = word
 
+             # Halt if 'STOP' is produced
              if word == stop_token:
                  break
 
@@ -302,14 +272,8 @@ class TrigramModel(object):
         lambda3 = 1/3.0
 
         trigram_probability = lambda1*self.raw_trigram_probability(trigram)
-        # print('trigram prob')
-        # print(trigram_probability)
         bigram_probability = lambda2*self.raw_bigram_probability(trigram[1:3])
-        # print('bigram prob')
-        # print(bigram_probability)
         unigram_probability = lambda3*self.raw_unigram_probability((trigram[2],))
-        # print('unigram prob')
-        # print(unigram_probability)
 
         return trigram_probability + bigram_probability + unigram_probability
 
@@ -322,29 +286,18 @@ class TrigramModel(object):
         # Question to TA: Do we need to preprocess sentence to replace
         # OOV words with 'UNK'
 
-        # print(sentence)
-
         log_probs_sum = 0.0
         for trigram in get_ngrams(sentence, 3):
-            # print(trigram)
             log_prob = self.smoothed_trigram_probability(trigram)
-
-            # print('total trigram prob')
-            # print(log_prob)
 
             if log_prob == 0:
                 # Question to TA: How should we compute sentence_logprob if there is zero prob
-                print('This trigram has zero probs: ' + str(trigram))
-                raise Exception
-                # return float("-inf")
-                # log_probs_sum -= 1000
-                return -1000
+                # I assume we just return minus infinity
+                print('This trigram has zero probs even after smoothing: ' + str(trigram))
+                return float('-inf')
             else:
-                # print(math.log2(log_prob))
                 log_probs_sum += math.log2(log_prob)
 
-        # print('total sentence prob')
-        # print(log_probs_sum)
         return log_probs_sum
 
     def perplexity(self, corpus):
@@ -356,11 +309,6 @@ class TrigramModel(object):
         corpus_unigram_counts = defaultdict(int)
         l = 0.0
 
-        # Question to TA: We always use training lexicon right???
-        # Question to TA: We always use prob. from training data right???
-        iter = 0
-        # generator = corpus_reader(corpus, self.lexicon)
-        # for sentence in generator:
         for sentence in corpus:
             for unigram in get_ngrams(sentence, 1):
                 corpus_unigram_counts[unigram] += 1
@@ -368,16 +316,13 @@ class TrigramModel(object):
             log_prob = self.sentence_logprob(sentence)
             l += log_prob
 
-            iter = iter + 1
-
-        # Question to TA: Do we exclude 'START' and 'STOP' when calculating total words for perplexity?
-        # If both are included, for brown test, this would yield 300ish perplexity
+        # As clarified by Prof. Benajiba, 'START' and 'STOP' tokens count towards the total number of words
+        # For brown test, this would yield 173-ish perplexity
         corpus_total_words = sum(corpus_unigram_counts.values())
-        # If both are excluded, for brown test, this would yield 170ish perplexity
+        # If not, it should be something like:
         # corpus_total_words = sum(count for word, count in corpus_unigram_counts.items() if word not in {(start_token,), (stop_token,)})
+        # This would yield 300-ish perplexity for brown test
 
-        # print(l)
-        # print(corpus_total_words)
         l = l / corpus_total_words
         return 2 ** ((-1)*l)
 
@@ -390,11 +335,8 @@ def essay_scoring_experiment(training_file1, training_file2, testdir1, testdir2)
         total = 0
         correct = 0
 
-        # This will be for test_high
+        # This will be for test_high hence the pp_high < pp_low condition
         for f in os.listdir(testdir1):
-            # print(f)
-            # print(os.path.join(testdir1, f))
-            # raise Exception
             pp_high = model1.perplexity(corpus_reader(os.path.join(testdir1, f), model1.lexicon))
             pp_low = model2.perplexity(corpus_reader(os.path.join(testdir1, f), model2.lexicon))
 
@@ -403,10 +345,7 @@ def essay_scoring_experiment(training_file1, training_file2, testdir1, testdir2)
 
             total = total + 1
 
-        correct1 = correct
-        total1 = total
-
-        # This will be for test_low
+        # This will be for test_low hence the pp_low < pp_high condition
         for f in os.listdir(testdir2):
             pp_high = model1.perplexity(corpus_reader(os.path.join(testdir2, f), model1.lexicon))
             pp_low = model2.perplexity(corpus_reader(os.path.join(testdir2, f), model2.lexicon))
@@ -416,33 +355,90 @@ def essay_scoring_experiment(training_file1, training_file2, testdir1, testdir2)
 
             total = total + 1
 
-        print(correct1)
-        print(total1)
-
-        print(correct - correct1)
-        print(total - total1)
-
         return correct / total
 
 if __name__ == "__main__":
+    # Loading model
+    data_dir = 'hw1_data/'
+    if len(sys.argv) > 1:
+        model = TrigramModel(sys.argv[1])
+    else:
+        model = TrigramModel(data_dir + 'brown_train.txt')
 
-    model = TrigramModel(sys.argv[1])
+    # Test get_ngrams
+    assert get_ngrams([], 1) == []
+    assert get_ngrams(['natural', 'language', 'processing'], 1) == [(start_token,), ('natural',), ('language',), ('processing',), (stop_token,)]
+    assert get_ngrams(['natural', 'language', 'processing'], 2) == [(start_token, 'natural',), ('natural', 'language',), ('language', 'processing',), ('processing', stop_token,)]
+    assert get_ngrams(['natural', 'language', 'processing'], 3) == [(start_token, start_token, 'natural',), (start_token, 'natural', 'language',), ('natural','language', 'processing',), ('language', 'processing', stop_token,)]
 
-    # put test code here...
-    # or run the script from the command line with
-    # $ python -i trigram_model.py [corpus_file]
-    # >>>
-    #
-    # you can then call methods on the model instance in the interactive
-    # Python prompt.
+    # Test count ngrams
+    assert model.unigramcounts[(start_token,)] == 41614
+    assert model.unigramcounts[(start_token,)] == model.unigramcounts[(stop_token,)]
+    assert model.unigramcounts[('the',)] == 61428
+    assert model.bigramcounts[(start_token, 'the',)] == 5478
+    assert model.trigramcounts[(start_token, start_token, 'the',)] == 5478
 
+    # Test raw probabilities
+    assert model.raw_unigram_probability(('the',)) == 61428/1084179
+    assert model.raw_bigram_probability(('the', 'jury',)) == 35/61428
+    assert model.raw_trigram_probability(('the', 'jury', 'said',)) == 7/35
 
-    # Testing perplexity:
-    # dev_corpus = corpus_reader(sys.argv[2], model.lexicon)
-    # pp = model.perplexity(dev_corpus)
-    # print(pp)
+    # Zero probs
+    assert model.raw_unigram_probability(('casdajnkuakk',)) == 0 # no such unigram
+    assert model.raw_bigram_probability(('the', 'casdajnkuakk',)) == 0 # no such bigram (numerator is zero)
+    assert model.raw_bigram_probability(('casdajnkuakk', 'the',)) == 0 # no such preceding unigram (denominator is zero), also return zero
+    assert model.raw_trigram_probability(('the', 'jury', 'casdajnkuakk',)) == 0 # no such trigram (numerator is zero)
+    assert model.raw_trigram_probability(('casdajnkuakk', 'the', 'jury',)) == 0 # no such preceding bigram (denominator is zero), also return zero
 
+    # Special cases for (start_token, start_token, anything)
+    assert model.raw_bigram_probability((start_token, 'the',)) == 5478/41614
+    assert model.raw_trigram_probability((start_token, start_token, 'the',)) == model.raw_bigram_probability((start_token, 'the',))
 
-    # Essay scoring experiment:
-    # acc = essay_scoring_experiment('train_high.txt', 'train_low.txt", "test_high", "test_low")
-    # print(acc)
+    # Test smoothed_trigram_probability
+    assert model.smoothed_trigram_probability(('casdajnkuakk', 'the', 'jury',)) == (1/3)*(0) + (1/3)*(35/61428) + (1/3)*(59/1084179) # trigram is not found, but bigram and unigram are found
+    assert model.smoothed_trigram_probability(('the', 'casdajnkuakk', 'jury',)) == (1/3)*(0) + (1/3)*(0) + (1/3)*(59/1084179) # only unigram is found
+    assert model.smoothed_trigram_probability(('the', 'jury', 'casdajnkuakk',)) == 0 # All trigram, bigram and unigram are not found
+
+    # Test sentence_logprob
+    assert model.sentence_logprob(['the', 'jury', 'said', 'casdajnkuakk']) == float('-inf')
+
+    # Test perplexity
+    if len(sys.argv) > 2:
+        test_corpus = corpus_reader(sys.argv[2], model.lexicon)
+    else:
+        test_corpus = corpus_reader(data_dir + 'brown_test.txt', model.lexicon)
+
+    # brown_test perplexity
+    pp = model.perplexity(test_corpus)
+    print('Perplexity for brown_test: ')
+    print(pp)
+    assert pp < 400.0
+
+    # brown_train perplexity
+    train_corpus = corpus_reader(data_dir + 'brown_train.txt', model.lexicon)
+    pp = model.perplexity(train_corpus)
+    print('Perplexity for brown_train: ')
+    print(pp)
+    assert pp < 20.0
+
+    # Essay scoring experiment
+    ets_toefl_data_dir = data_dir + 'ets_toefl_data/'
+    acc = essay_scoring_experiment(ets_toefl_data_dir + 'train_high.txt', ets_toefl_data_dir + 'train_low.txt', ets_toefl_data_dir + 'test_high', ets_toefl_data_dir + 'test_low')
+    print('Essay scoring accuracy: ')
+    print(acc)
+    assert pp > 0.8
+
+    # Test generate random sentence
+    random_sentence_1 = model.generate_sentence(10)
+    print('Sample random sentence 1 of max length 10:')
+    print(random_sentence_1)
+    assert len(random_sentence_1) < 11
+    if (len(random_sentence_1) < 10):
+        assert random_sentence_1[len(random_sentence_1)-1] == stop_token
+
+    random_sentence_2 = model.generate_sentence()
+    print('Sample random sentence 2 of max length 20:')
+    print(random_sentence_2)
+    assert len(random_sentence_2) < 21
+    if (len(random_sentence_2) < 20):
+        assert random_sentence_2[len(random_sentence_2)-1] == stop_token
