@@ -367,89 +367,90 @@ if __name__ == '__main__':
     else:
         model = TrigramModel(data_dir + 'brown_train.txt')
 
-    # Test get_ngrams
-    assert get_ngrams([], 1) == []
-    assert get_ngrams(['natural', 'language', 'processing'], 1) == [(start_token,), ('natural',), ('language',), ('processing',), (stop_token,)]
-    assert get_ngrams(['natural', 'language', 'processing'], 2) == [(start_token, 'natural',), ('natural', 'language',), ('language', 'processing',), ('processing', stop_token,)]
-    assert get_ngrams(['natural', 'language', 'processing'], 3) == [(start_token, start_token, 'natural',), (start_token, 'natural', 'language',), ('natural','language', 'processing',), ('language', 'processing', stop_token,)]
-
-    # Test count_ngrams
-    assert model.unigramcounts[(start_token,)] == 41614
-    assert model.unigramcounts[(start_token,)] == model.unigramcounts[(stop_token,)]
-    assert model.unigramcounts[('the',)] == 61428
-    assert model.bigramcounts[(start_token, 'the',)] == 5478
-    assert model.trigramcounts[(start_token, start_token, 'the',)] == 5478
-
-    # Test raw_uni/bi/trigram_probability
-    assert model.raw_unigram_probability(('the',)) == 61428/1084179
-    assert model.raw_bigram_probability(('the', 'jury',)) == 35/61428
-    assert model.raw_trigram_probability(('the', 'jury', 'said',)) == 7/35
-
-    # Zero probs
-    assert model.raw_unigram_probability(('casdajnkuakk',)) == 0 # no such unigram
-    assert model.raw_bigram_probability(('the', 'casdajnkuakk',)) == 0 # no such bigram (numerator is zero)
-    assert model.raw_bigram_probability(('casdajnkuakk', 'the',)) == 0 # no such preceding unigram (denominator is zero), also return zero
-    assert model.raw_trigram_probability(('the', 'jury', 'casdajnkuakk',)) == 0 # no such trigram (numerator is zero)
-    assert model.raw_trigram_probability(('casdajnkuakk', 'the', 'jury',)) == 0 # no such preceding bigram (denominator is zero), also return zero
-
-    # Special cases for (start_token, start_token, anything)
-    assert model.raw_bigram_probability((start_token, 'the',)) == 5478/41614
-    assert model.raw_trigram_probability((start_token, start_token, 'the',)) == model.raw_bigram_probability((start_token, 'the',))
-
-    # Test smoothed_trigram_probability
-    assert model.smoothed_trigram_probability(('casdajnkuakk', 'the', 'jury',)) == (1/3)*(0) + (1/3)*(35/61428) + (1/3)*(59/1084179) # trigram is not found, but bigram and unigram are found
-    assert model.smoothed_trigram_probability(('the', 'casdajnkuakk', 'jury',)) == (1/3)*(0) + (1/3)*(0) + (1/3)*(59/1084179) # only unigram is found
-    assert model.smoothed_trigram_probability(('the', 'jury', 'casdajnkuakk',)) == 0 # All trigram, bigram and unigram are not found
-
-    # Test sentence_logprob
-    assert model.sentence_logprob(['the', 'verdict', 'came', 'three', 'hours', 'later']) == sum([
-            math.log2(model.smoothed_trigram_probability((start_token, start_token, 'the',))),
-            math.log2(model.smoothed_trigram_probability((start_token, 'the', 'verdict',))),
-            math.log2(model.smoothed_trigram_probability(('the', 'verdict', 'came',))),
-            math.log2(model.smoothed_trigram_probability(('verdict', 'came', 'three',))),
-            math.log2(model.smoothed_trigram_probability(('came', 'three', 'hours',))),
-            math.log2(model.smoothed_trigram_probability(('three', 'hours', 'later',))),
-            math.log2(model.smoothed_trigram_probability(('hours', 'later', stop_token,)))
-        ])
-    assert model.sentence_logprob(['the', 'jury', 'said', 'casdajnkuakk']) == float('-inf') # the last two trigrams will have smoothed_trigram_probability of zero
-
-    # Test perplexity
-    if len(sys.argv) > 2:
-        test_corpus = corpus_reader(sys.argv[2], model.lexicon)
-    else:
-        test_corpus = corpus_reader(data_dir + 'brown_test.txt', model.lexicon)
-
-    # brown_test perplexity
-    pp = model.perplexity(test_corpus)
-    print('Perplexity for brown_test: ')
-    print(pp)
-    assert pp < 400.0
-
-    # brown_train perplexity
-    train_corpus = corpus_reader(data_dir + 'brown_train.txt', model.lexicon)
-    pp = model.perplexity(train_corpus)
-    print('Perplexity for brown_train: ')
-    print(pp)
-    assert pp < 20.0
-
-    # Essay scoring experiment
-    ets_toefl_data_dir = data_dir + 'ets_toefl_data/'
-    acc = essay_scoring_experiment(ets_toefl_data_dir + 'train_high.txt', ets_toefl_data_dir + 'train_low.txt', ets_toefl_data_dir + 'test_high', ets_toefl_data_dir + 'test_low')
-    print('Essay scoring accuracy: ')
-    print(acc)
-    assert pp > 0.8
-
-    # Test generate random sentence
-    random_sentence_1 = model.generate_sentence(10)
-    print('Sample random sentence 1 of max length 10:')
-    print(random_sentence_1)
-    assert len(random_sentence_1) < 11
-    if (len(random_sentence_1) < 10):
-        assert random_sentence_1[len(random_sentence_1)-1] == stop_token
-
-    random_sentence_2 = model.generate_sentence()
-    print('Sample random sentence 2 of max length 20:')
-    print(random_sentence_2)
-    assert len(random_sentence_2) < 21
-    if (len(random_sentence_2) < 20):
-        assert random_sentence_2[len(random_sentence_2)-1] == stop_token
+    # # Commented tests
+    # # Test get_ngrams
+    # assert get_ngrams([], 1) == []
+    # assert get_ngrams(['natural', 'language', 'processing'], 1) == [(start_token,), ('natural',), ('language',), ('processing',), (stop_token,)]
+    # assert get_ngrams(['natural', 'language', 'processing'], 2) == [(start_token, 'natural',), ('natural', 'language',), ('language', 'processing',), ('processing', stop_token,)]
+    # assert get_ngrams(['natural', 'language', 'processing'], 3) == [(start_token, start_token, 'natural',), (start_token, 'natural', 'language',), ('natural','language', 'processing',), ('language', 'processing', stop_token,)]
+    #
+    # # Test count_ngrams
+    # assert model.unigramcounts[(start_token,)] == 41614
+    # assert model.unigramcounts[(start_token,)] == model.unigramcounts[(stop_token,)]
+    # assert model.unigramcounts[('the',)] == 61428
+    # assert model.bigramcounts[(start_token, 'the',)] == 5478
+    # assert model.trigramcounts[(start_token, start_token, 'the',)] == 5478
+    #
+    # # Test raw_uni/bi/trigram_probability
+    # assert model.raw_unigram_probability(('the',)) == 61428/1084179
+    # assert model.raw_bigram_probability(('the', 'jury',)) == 35/61428
+    # assert model.raw_trigram_probability(('the', 'jury', 'said',)) == 7/35
+    #
+    # # Zero probs
+    # assert model.raw_unigram_probability(('casdajnkuakk',)) == 0 # no such unigram
+    # assert model.raw_bigram_probability(('the', 'casdajnkuakk',)) == 0 # no such bigram (numerator is zero)
+    # assert model.raw_bigram_probability(('casdajnkuakk', 'the',)) == 0 # no such preceding unigram (denominator is zero), also return zero
+    # assert model.raw_trigram_probability(('the', 'jury', 'casdajnkuakk',)) == 0 # no such trigram (numerator is zero)
+    # assert model.raw_trigram_probability(('casdajnkuakk', 'the', 'jury',)) == 0 # no such preceding bigram (denominator is zero), also return zero
+    #
+    # # Special cases for (start_token, start_token, anything)
+    # assert model.raw_bigram_probability((start_token, 'the',)) == 5478/41614
+    # assert model.raw_trigram_probability((start_token, start_token, 'the',)) == model.raw_bigram_probability((start_token, 'the',))
+    #
+    # # Test smoothed_trigram_probability
+    # assert model.smoothed_trigram_probability(('casdajnkuakk', 'the', 'jury',)) == (1/3)*(0) + (1/3)*(35/61428) + (1/3)*(59/1084179) # trigram is not found, but bigram and unigram are found
+    # assert model.smoothed_trigram_probability(('the', 'casdajnkuakk', 'jury',)) == (1/3)*(0) + (1/3)*(0) + (1/3)*(59/1084179) # only unigram is found
+    # assert model.smoothed_trigram_probability(('the', 'jury', 'casdajnkuakk',)) == 0 # All trigram, bigram and unigram are not found
+    #
+    # # Test sentence_logprob
+    # assert model.sentence_logprob(['the', 'verdict', 'came', 'three', 'hours', 'later']) == sum([
+    #         math.log2(model.smoothed_trigram_probability((start_token, start_token, 'the',))),
+    #         math.log2(model.smoothed_trigram_probability((start_token, 'the', 'verdict',))),
+    #         math.log2(model.smoothed_trigram_probability(('the', 'verdict', 'came',))),
+    #         math.log2(model.smoothed_trigram_probability(('verdict', 'came', 'three',))),
+    #         math.log2(model.smoothed_trigram_probability(('came', 'three', 'hours',))),
+    #         math.log2(model.smoothed_trigram_probability(('three', 'hours', 'later',))),
+    #         math.log2(model.smoothed_trigram_probability(('hours', 'later', stop_token,)))
+    #     ])
+    # assert model.sentence_logprob(['the', 'jury', 'said', 'casdajnkuakk']) == float('-inf') # the last two trigrams will have smoothed_trigram_probability of zero
+    #
+    # # Test perplexity
+    # if len(sys.argv) > 2:
+    #     test_corpus = corpus_reader(sys.argv[2], model.lexicon)
+    # else:
+    #     test_corpus = corpus_reader(data_dir + 'brown_test.txt', model.lexicon)
+    #
+    # # brown_test perplexity
+    # pp = model.perplexity(test_corpus)
+    # print('Perplexity for brown_test: ')
+    # print(pp)
+    # assert pp < 400.0
+    #
+    # # brown_train perplexity
+    # train_corpus = corpus_reader(data_dir + 'brown_train.txt', model.lexicon)
+    # pp = model.perplexity(train_corpus)
+    # print('Perplexity for brown_train: ')
+    # print(pp)
+    # assert pp < 20.0
+    #
+    # # Essay scoring experiment
+    # ets_toefl_data_dir = data_dir + 'ets_toefl_data/'
+    # acc = essay_scoring_experiment(ets_toefl_data_dir + 'train_high.txt', ets_toefl_data_dir + 'train_low.txt', ets_toefl_data_dir + 'test_high', ets_toefl_data_dir + 'test_low')
+    # print('Essay scoring accuracy: ')
+    # print(acc)
+    # assert pp > 0.8
+    #
+    # # Test generate random sentence
+    # random_sentence_1 = model.generate_sentence(10)
+    # print('Sample random sentence 1 of max length 10:')
+    # print(random_sentence_1)
+    # assert len(random_sentence_1) < 11
+    # if (len(random_sentence_1) < 10):
+    #     assert random_sentence_1[len(random_sentence_1)-1] == stop_token
+    #
+    # random_sentence_2 = model.generate_sentence()
+    # print('Sample random sentence 2 of max length 20:')
+    # print(random_sentence_2)
+    # assert len(random_sentence_2) < 21
+    # if (len(random_sentence_2) < 20):
+    #     assert random_sentence_2[len(random_sentence_2)-1] == stop_token
