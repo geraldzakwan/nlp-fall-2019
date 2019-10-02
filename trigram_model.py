@@ -14,10 +14,12 @@ Homework 1 - Programming Component: Trigram Language Models
 Yassine Benajiba
 """
 
+
 # Change token to constant for readibility
 start_token = 'START'
 stop_token = 'STOP'
 unk_token = 'UNK'
+
 
 def is_empty(list_of_dict):
     if list_of_dict is None:
@@ -203,6 +205,7 @@ class TrigramModel(object):
         # The denominator is always greater than zero, NaN is not a possibility
         return self.unigramcounts[unigram] / self.total_words
 
+
     # Generate trigram probability for every trigram that starts with a certain bigram
     # This is a helper function for generate_sentence
     def generate_trigram_probability_distribution(self, given_bigram):
@@ -274,6 +277,7 @@ class TrigramModel(object):
 
         return trigram_probability + bigram_probability + unigram_probability
 
+
     def sentence_logprob(self, sentence):
         """
         COMPLETE THIS METHOD (PART 5)
@@ -295,6 +299,7 @@ class TrigramModel(object):
                 log_probs_sum += math.log2(log_prob)
 
         return log_probs_sum
+
 
     def perplexity(self, corpus):
         """
@@ -352,6 +357,7 @@ def essay_scoring_experiment(training_file1, training_file2, testdir1, testdir2)
             total = total + 1
 
         return correct / total
+
 
 if __name__ == '__main__':
     # Loading model
