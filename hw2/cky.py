@@ -97,7 +97,11 @@ class CkyParser(object):
         return False
         """
         # TODO, part 2
-        return False
+        parse_table, parse_probs = self.parse_with_backpointers(tokens)
+
+        # Check if there is nonterminal 'TOP' in the whole span
+        # print(parse_table[(0, len(tokens), )])
+        return 'TOP' in parse_table[(0, len(tokens), )]
 
     def parse_with_backpointers(self, tokens):
         """
@@ -106,13 +110,13 @@ class CkyParser(object):
         # TODO, part 3
         # Init table with
         table = {}
-        for i in range(0, len(tokens)):
-            for j in range(i+1, len(tokens)):
+        for i in range(0, len(tokens)+1):
+            for j in range(i+1, len(tokens)+1):
                 table[(i, j,)] = {}
 
         probs = None
 
-        for i in range(0, len(tokens)-1):
+        for i in range(0, len(tokens)):
             rules = self.grammar.rhs_to_rules[(tokens[i],)]
 
             for rule in rules:
@@ -120,14 +124,14 @@ class CkyParser(object):
                 # What is the backpointer of length 1, is it just the terminal string?
                 table[(i, i+1,)][nonterminal] = tokens[i]
 
-        for length in range(2, len(tokens)):
+        for length in range(2, len(tokens)+1):
         # for length in range(2, 3):
             # print(length)
 
-            for i in range(0, len(tokens)-length):
-                # print('------')
+            for i in range(0, len(tokens)-length+1):
                 j = i + length
 
+                # print('------')
                 # print(i, j)
                 for k in range(i+1, j):
                     # print(i,k)
@@ -170,6 +174,9 @@ class CkyParser(object):
                                 # print(nonterminal_pair)
                                 pass
 
+                # print(i, j)
+                # print(table[(i, j,)])
+
 
         return table, probs
 
@@ -188,8 +195,11 @@ if __name__ == "__main__":
         grammar = Pcfg(grammar_file)
         parser = CkyParser(grammar)
         toks =['flights', 'from','miami', 'to', 'cleveland','.']
-        #print(parser.is_in_language(toks))
+        print(parser.is_in_language(toks))
+        print(parser.is_in_language('flights from miami to cleveland .'.split(' ')))
+        print(parser.is_in_language('miami flights cleveland from to .'.split(' ')))
         table, probs = parser.parse_with_backpointers(toks)
         assert check_table_format(table)
-        print(table)
+        # print(table[(0, 5,)])
+        # print(table)
         # assert check_probs_format(probs)
