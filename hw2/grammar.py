@@ -53,41 +53,44 @@ class Pcfg(object):
         """
         for nonterminal in self.lhs_to_rules:
             # First, check if nonterminal follows the format, i.e. all uppercase
-            if not Pcfg.check_nonterminal_format(nonterminal):
+            if not self.check_nonterminal_format(nonterminal):
                 print('The first nonterminal to not follow the format: ' + nonterminal)
                 return False
 
             # Second, check the validity of the production rule, e.g. either has two nonterminals or a terminal
-            if not Pcfg.check_production_rules(self.lhs_to_rules[nonterminal]):
+            if not self.check_production_rules(self.lhs_to_rules[nonterminal]):
                 print('The first nonterminal whose production rule doesn\'t follow the format: ' + nonterminal)
                 return False
 
             # Third, check if all production rules sum up to 1
-            if not Pcfg.check_production_rules_total_probability(self.lhs_to_rules[nonterminal]):
+            if not self.check_production_rules_total_probability(self.lhs_to_rules[nonterminal]):
                 print('The first nonterminal whose production rule probabilities don\'t sum up closely to 1: ' + nonterminal)
                 return False
 
         return True
 
-    @staticmethod
-    def check_nonterminal_format(nonterminal):
+    def check_nonterminal_format(self, nonterminal):
+        # A nonterminal should all be uppercase
         return nonterminal.isupper()
 
-    @staticmethod
-    def check_terminal_format(terminal):
-        return True
+    def check_terminal_valid(self, terminal):
+        # A terminal should not exist on the lhs
+        # if terminal == 'display':
+        #     print(terminal)
+        #     print(self.lhs_to_rules[terminal])
+        #     print(self.rhs_to_rules[(terminal,)])
+        return terminal not in self.lhs_to_rules
 
-    @staticmethod
-    def check_production_rules(production_triplets):
+    def check_production_rules(self, production_triplets):
         for production_triplet in production_triplets:
             production_rule = production_triplet[1]
 
             # The production rule needs to be either two nonterminals or a terminal
             if len(production_rule) == 2:
-                if not (Pcfg.check_nonterminal_format(production_rule[0]) and Pcfg.check_nonterminal_format(production_rule[1])):
+                if not (self.check_nonterminal_format(production_rule[0]) and self.check_nonterminal_format(production_rule[1])):
                     return False
             elif len(production_rule) == 1:
-                if not Pcfg.check_terminal_format(production_rule[0]):
+                if not self.check_terminal_valid(production_rule[0]):
                     return False
             else:
                 # Empty production rule is not valid
@@ -95,8 +98,7 @@ class Pcfg(object):
 
         return True
 
-    @staticmethod
-    def check_production_rules_total_probability(production_triplets):
+    def check_production_rules_total_probability(self, production_triplets):
         total_probability = float(0.0)
         for production_triplet in production_triplets:
             total_probability = total_probability + production_triplet[2]
