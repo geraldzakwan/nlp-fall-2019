@@ -173,7 +173,7 @@ class CkyParser(object):
                 parse_table[(i, i+1,)][nonterminal] = tokens[i]
                 probs_table[(i, i+1,)][nonterminal] = prob
 
-
+        # Fill parse table of span of length 2 and above (rules involving only nonterminal)
         for length in range(2, len(tokens)+1):
             # Iterate over all possibilites of span of current length
             for i in range(0, len(tokens)-length+1):
@@ -243,9 +243,27 @@ def get_tree(chart, i, j, nt):
     """
     # TODO: Part 4
 
+    # Hint: Recursively traverse the parse chart
+    # Base case is when the dict value is just a terminal string
+    if isinstance(chart[(i, j, )][nt], str):
+        return (nt, chart[(i, j, )][nt], )
+    else:
+        # First, get the backpointers
+        left_backpointer = chart[(i, j, )][nt][0]
+        right_backpointer = chart[(i, j, )][nt][1]
 
-    return None
+        # Then, get their index and nonterminal
+        left_nt = left_backpointer[0]
+        right_nt = right_backpointer[0]
 
+        left_i = left_backpointer[1]
+        right_i = right_backpointer[1]
+
+        left_j = left_backpointer[2]
+        right_j = right_backpointer[2]
+
+        # Finally, recurse over left and right child
+        return (get_tree(chart, left_i, left_j, left_backpointer), get_tree(chart, right_i, right_j, right_backpointer))
 
 if __name__ == "__main__":
 
@@ -264,3 +282,5 @@ if __name__ == "__main__":
         print(table[(0, 6, )])
         print(probs[(0, 6, )])
         print('-----------------')
+
+        print(get_tree(table, 0, len(toks), 'TOP'))

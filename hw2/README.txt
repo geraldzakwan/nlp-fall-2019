@@ -17,4 +17,10 @@
   - ('NP', ('flight', 'to'), 0.004)
   - ('NP', (), 0.0)
 
-  2. For nonterminal, 
+  2. For nonterminal,
+
+- Part 3
+
+  # Example of a backpointer value:
+  # Let say we want to define backpointer for parse_table[(0, 3,)]['NP']
+  # It is something like (('NP', 0, 2), ('PP', 2, 3),)
