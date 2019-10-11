@@ -263,7 +263,8 @@ def get_tree(chart, i, j, nt):
         right_j = right_backpointer[2]
 
         # Finally, recurse over left and right child
-        return (get_tree(chart, left_i, left_j, left_backpointer), get_tree(chart, right_i, right_j, right_backpointer))
+        # Don't forget to add current parse result
+        return ((nt, get_tree(chart, left_i, left_j, left_nt), get_tree(chart, right_i, right_j, right_nt), ))
 
 if __name__ == "__main__":
 
@@ -281,6 +282,8 @@ if __name__ == "__main__":
 
         print(table[(0, 6, )])
         print(probs[(0, 6, )])
+        print(table[(0, 5, )])
+        print(probs[(0, 5, )])
         print('-----------------')
 
         print(get_tree(table, 0, len(toks), 'TOP'))
