@@ -97,52 +97,10 @@ class CkyParser(object):
         return False
         """
         # TODO, part 2
-
-        # Init parse table
-        parse_table = {}
-        for i in range(0, len(tokens)+1):
-            for j in range(i+1, len(tokens)+1):
-                parse_table[(i, j,)] = {}
-
-        # Fill parse table of span 1 (rules involving only terminal)
-        for i in range(0, len(tokens)):
-            rules = self.grammar.rhs_to_rules[(tokens[i],)]
-
-            for rule in rules:
-                nonterminal = rule[0]
-                # No need backpointer in this case, set parse_table value to empty tuple is sufficient
-                parse_table[(i, i+1,)][nonterminal] = ()
-
-        # Fill parse table of span of length 2 and above (rules involving only nonterminal)
-        for length in range(2, len(tokens)+1):
-            # Iterate over all possibilites of span of current length
-            for i in range(0, len(tokens)-length+1):
-                j = i + length
-
-                # Get combinations of every two spans that cover current span
-                for k in range(i+1, j):
-                    # Retrieve the nonterminals that they contain
-                    some_nonterminal_1 = parse_table[(i, k ,)]
-                    some_nonterminal_2 = parse_table[(k, j ,)]
-
-                    # Remember we may have more than one nonterminal in these two spans
-                    # Let's iterate both spans and make a combination of pairs
-                    for nonterminal_1 in some_nonterminal_1:
-                        for nonterminal_2 in some_nonterminal_2:
-                            nonterminal_pair = (nonterminal_1, nonterminal_2, )
-
-                            # Check if the pair can result in new nonterminal
-                            if nonterminal_pair in self.grammar.rhs_to_rules:
-                                rhs_to_rules = self.grammar.rhs_to_rules[nonterminal_pair]
-
-                                # Add every new nonterminal to chart current span i, j
-                                # No need backpointer in this case, set parse_table value to empty tuple is sufficient
-                                for rule in rhs_to_rules:
-                                    new_nonterminal = rule[0]
-                                    parse_table[(i, j,)][new_nonterminal] = ()
+        parse_table, parse_probs = self.parse_with_backpointers(tokens)
 
         # Check if there is nonterminal 'TOP' in the whole span
-        # It indicates whether or not a sentence belongs to the grammar/language
+        # print(parse_table[(0, len(tokens), )])
         return 'TOP' in parse_table[(0, len(tokens), )]
 
     def parse_with_backpointers(self, tokens):
@@ -150,87 +108,77 @@ class CkyParser(object):
         Parse the input tokens and return a parse table and a probability table.
         """
         # TODO, part 3
-
-        # Init parse table and probs table
-        parse_table = {}
-        probs_table = {}
-
+        # Init table with
+        table = {}
         for i in range(0, len(tokens)+1):
             for j in range(i+1, len(tokens)+1):
-                parse_table[(i, j,)] = {}
-                probs_table[(i, j,)] = {}
+                table[(i, j,)] = {}
 
-        # Fill parse table of span of length 2 and above (rules involving only nonterminal)
+        probs = None
+
         for i in range(0, len(tokens)):
             rules = self.grammar.rhs_to_rules[(tokens[i],)]
 
-            # Question to TA: Do we need to pick the most probable nonterminal in span of length 1?
-            # In this case, I keep all if more than one apply
             for rule in rules:
                 nonterminal = rule[0]
-                prob = rule[2]
-
-                parse_table[(i, i+1,)][nonterminal] = tokens[i]
-                probs_table[(i, i+1,)][nonterminal] = prob
-
+                table[(i, i+1,)][nonterminal] = tokens[i]
 
         for length in range(2, len(tokens)+1):
-            # Iterate over all possibilites of span of current length
+        # for length in range(2, 3):
+            # print(length)
+
             for i in range(0, len(tokens)-length+1):
                 j = i + length
 
-                # Get combinations of every two spans that cover current span
+                # print('------')
+                # print(i, j)
                 for k in range(i+1, j):
-                    # Retrieve the nonterminals that they contain
-                    some_nonterminal_1 = parse_table[(i, k ,)]
-                    some_nonterminal_2 = parse_table[(k, j ,)]
+                    # print(i,k)
+                    # print(k,j)
 
-                    # Remember we may have more than one nonterminal in these two spans
-                    # Let's iterate both spans and make a combination of pairs
+                    # Get pair of nonterminals from chart of length size - 1
+                    some_nonterminal_1 = table[(i, k ,)]
+                    # print('NONTERMINAL1:')
+                    # print(some_nonterminal_1)
+                    some_nonterminal_2 = table[(k, j ,)]
+                    # print('NONTERMINAL2:')
+                    # print(some_nonterminal_2)
+
+                    # Remember we may have more than one nonterminal in a chart cell
+                    # Let's iterate both and make a combination of pairs
                     for nonterminal_1 in some_nonterminal_1:
                         for nonterminal_2 in some_nonterminal_2:
                             nonterminal_pair = (nonterminal_1, nonterminal_2, )
 
-                            # Check if the pair can result in new nonterminal
+                            # Check if that pair can result in new nonterminal
                             if nonterminal_pair in self.grammar.rhs_to_rules:
                                 rhs_to_rules = self.grammar.rhs_to_rules[nonterminal_pair]
+                                # print('Yes, we find a combination')
+                                # print(nonterminal_pair)
+                                # print(rhs_to_rules)
 
-                                # Add every new nonterminal to current span i, j
-                                # of the parse table along with its backpointer
+                                # Add every new_nonterminal to chart i,j
+                                # Example of backpointer value:
+                                # Let say, we want to define backpointer for table[(0, 3,)]['NP']
+                                # It can be something like (('NP',0,2), ('PP',2,3),)
                                 for rule in rhs_to_rules:
                                     new_nonterminal = rule[0]
-                                    new_prob = rule[2]
-
-                                    # Example of a backpointer value:
-                                    # Let say we want to define backpointer for parse_table[(0, 3,)]['NP']
-                                    # It is something like (('NP', 0, 2), ('PP', 2, 3),)
                                     first_backpointer = (nonterminal_pair[0], i, k, )
                                     second_backpointer = (nonterminal_pair[1], k, j, )
+                                    table[(i, j,)][new_nonterminal] = (first_backpointer, second_backpointer, )
 
-                                    # Check if we already assign a backpointer previously
-                                    if new_nonterminal not in parse_table[(i, j, )]:
-                                        # If no backpointer is assigned yet, simply assign it
-                                        parse_table[(i, j, )][new_nonterminal] = (first_backpointer, second_backpointer, )
+                                    # print((first_backpointer, second_backpointer, ))
+                            else:
+                                # print('This nonterminal_pair is trash')
+                                # print(nonterminal_pair)
+                                pass
 
-                                        # Assign the probability as well
-                                        probs_table[(i, j, )][new_nonterminal] = new_prob
-                                    else:
-                                        # Check if current prob is bigger than previous prob
-                                        if new_prob > probs_table[(i, j, )][new_nonterminal]:
-                                            # print('Example of replacing backpointer with another one that has higher prob: ')
-                                            # print('Previous backpointer and the probability: ')
-                                            # print(parse_table[(i, j, )][new_nonterminal])
-                                            # print(probs_table[(i, j, )][new_nonterminal])
-                                            # print('New backpointer and the probability: ')
-                                            # print(first_backpointer, second_backpointer, )
-                                            # print(new_prob)
+                # print(i, j)
+                # print(table[(i, j,)])
 
-                                            # Replace prob and backpointer if it is
-                                            parse_table[(i, j, )][new_nonterminal] = (first_backpointer, second_backpointer, )
 
-                                            probs_table[(i, j, )][new_nonterminal] = new_prob
+        return table, probs
 
-        return parse_table, probs_table
 
 def get_tree(chart, i,j,nt):
     """
@@ -247,13 +195,10 @@ if __name__ == "__main__":
         parser = CkyParser(grammar)
         toks =['flights', 'from','miami', 'to', 'cleveland','.']
         print(parser.is_in_language(toks))
-        # print(parser.is_in_language('flights from miami to cleveland .'.split(' ')))
+        print(parser.is_in_language('flights from miami to cleveland .'.split(' ')))
         print(parser.is_in_language('miami flights cleveland from to .'.split(' ')))
         table, probs = parser.parse_with_backpointers(toks)
-        print(table[(0, 6, )])
-        print('-----------------')
-        print(probs[(0, 6, )])
-        # assert check_table_format(table)
+        assert check_table_format(table)
         # print(table[(0, 5,)])
         # print(table)
         # assert check_probs_format(probs)
