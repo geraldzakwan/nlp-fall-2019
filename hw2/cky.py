@@ -263,7 +263,7 @@ def get_tree(chart, i, j, nt):
         right_j = right_backpointer[2]
 
         # Finally, recurse over left and right child
-        # Don't forget to add current parse result
+        # Don't forget to add current parse result nt
         return ((nt, get_tree(chart, left_i, left_j, left_nt), get_tree(chart, right_i, right_j, right_nt), ))
 
 if __name__ == "__main__":
