@@ -1,0 +1,339 @@
+\documentclass[twoside]{homework}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{mathtools}
+\usepackage{times}
+\usepackage{ulem}
+\usepackage[nocenter]{qtree}
+\usepackage{tree-dvips}
+\usepackage{gb4e}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\studname{Name: Geraldi Dzakwan (gd2551)}
+\coursename{COMS W4705: Natural Language Processing (sec:002)}
+\hwNo{2}
+
+\begin{document}
+\maketitle
+
+\section*{Problem 1}
+\begin{itemize}
+    \item [a.] Taking the solution to Problem 2, there are two possible parses (sequence of tags) for the sentence, which are:
+    \begin{itemize}
+        \item [1.]
+            \begin{center}
+                \Tree[.{S $\xrightarrow{}$ NP VP [1.0]} [.{NP $\xrightarrow{}$ PRP [0.1]} {PRP $\xrightarrow{}$ they [1.0]} ]
+              [.{VP $\xrightarrow{}$ V NP [0.8]} [.{V $\xrightarrow{}$ are [0.5]} ]
+                    [.{NP $\xrightarrow{}$ Adj NP [0.3]} [ .{Adj $\xrightarrow{}$ baking [1.0]} ] [.{NP $\xrightarrow{}$ N [0.6]} {N $\xrightarrow{}$ potatoes [1.0]} ]]]]
+            \end{center}
+            In other words, the sequence of tags are:\newline\newline
+            tags1 = [PRP, V, Adj, N]\newline\newline
+            There are two ways of computing the joint probability P(tags1, words):
+            \begin{itemize}
+                \item [1.] The first way is just to use the parse tree probability from Problem 2 for the first parse tree, which equals to \boldsymbol{0.0072}. They are the same value basically because when we create a parse tree, we also give tags to the words at the same time.\newline Reference: https://piazza.com/class/k09vvrvx2l846o?cid=124
+                \item [2.] Another way to compute the joint probability is by using the HMM created in Problem 1b. Note that NP and VP nonterminals aren't used (the detail on why and how is in the answer for Problem 1b). Then, the joint probability for tags1 would be:\newline\newline
+                $$P(tags1, words)=\prod_{i=1}^4P(t_i|t_{i-1})P(w_i|t_i)$$
+                $P(tags1, words)=P(PRP|S)*P(they|PRP)*P(V|PRP)*P(are|V)*P(Adj|V)*P(baking|Adj)*P(N|Adj)*P(potatoes|N)$
+                $$P(tags1, words)=0.1*1*0.8*0.5*0.3*1.0*0.6*1.0=\boldsymbol{0.0072}$$
+            \end{itemize}
+            Both yield the same result, thus:
+            $$\boldsymbol{P(tags1,word)=0.0072}$$
+        \item [2.] \text{}
+        \begin{center}
+                \Tree[ .{S $\xrightarrow{}$ NP VP [1.0]} [ .{NP $\xrightarrow{}$ PRP [0.1]} {PRP $\xrightarrow{}$ they [1.0]} ] [ .{VP $\xrightarrow{}$ Aux V NP [0.2]} [ [ .{Aux $\xrightarrow{}$ are [1.0]} ] [ .{V $\xrightarrow{}$ baking [0.5]} ] [.{NP $\xrightarrow{}$ N [0.6]} {N $\xrightarrow{}$ potatoes [1.0]} ] ] ] ]
+            \end{center}
+            In other words, the sequence of tags are:\newline\newline
+            tags2 = [PRP, Aux, V, N]\newline\newline
+            There are two ways of computing the joint probability P(tags2, words):
+            \begin{itemize}
+                \item [1.] Just like before, the first way is just to use the parse tree probability from Problem 2 for the second parse tree, which equals to \boldsymbol{0.006}.
+                \item [2.] Another way to compute the joint probability is by using the HMM created in Problem 1b. Then, the joint probability for tags2 would be:\newline\newline
+                $$P(tags2, words)=\prod_{i=1}^4P(t_i|t_{i-1})P(w_i|t_i)$$
+                $P(tags2, words)=P(PRP|S)*P(they|PRP)*P(Aux|PRP)*P(are|Aux)*P(V|Aux)*P(baking|V)*P(N|V)*P(potatoes|N)$
+                $$P(tags2, words)=0.1*1*0.2*1.0*1.0*0.5*0.6*1.0=\boldsymbol{0.006}$$
+            \end{itemize}
+            Both yield the same result, thus:
+            $$\boldsymbol{P(tags2,word)=0.006}$$
+    \end{itemize}
+    \item [b.] First, define our HMM states (POS tags) and observations (words):
+    \begin{itemize}
+        \item [1.] Set of states: \{S, Adj, PRP, N, V, Aux\}\newline
+        Note that I omit VP and NP in this scenario because they don't directly produce a terminal (word). In later part, I will show how I handle this when calculating transition probability.
+        \item [2.] Set of observations: \{they, potatoes, baking, are\}
+    \end{itemize}
+    Then, we can calculate our transition probabilities (only for those which are not zero). Let's first consider the rule S$\xrightarrow{}$NP VP. There are two transitions basically in this case, which are S$\xrightarrow{}$NP and NP$\xrightarrow{}$VP. Let's examine each transition.
+    \begin{itemize}
+        \item [1.] S $\xrightarrow{}$ NP\newline
+        As I've said before, NP is not part of the set of states. To handle that, we can replace NP with its production rules instead: NP $\xrightarrow{}$ Adj NP, NP $\xrightarrow{}$ PRP and NP$\xrightarrow{}$N. Note that these will result in initial transition probabilities because S is the start. Thus, we will have initial transition probabilities:
+        \begin{itemize}
+            \item [(TP1)] S $\xrightarrow{}$ Adj [0.3] thus P(Adj$|$S) = 0.3
+            \item [(TP2)] S $\xrightarrow{}$ PRP [0.1] thus P(PRP$|$S) = 0.1
+            \item [(TP3)] S $\xrightarrow{}$ N [0.6] thus P(N$|$S) = 0.6
+        \end{itemize}
+        Next, we should notice that since NP can recurse (NP $\xrightarrow{}$ Adj NP), we will have to also assign a probability from Adj to itself, to PRP and to N:
+        \begin{itemize}
+            \item [(TP4)] Adj $\xrightarrow{}$ Adj [0.3] thus P(Adj$|$Adj) = 0.3
+            \item [(TP5)] Adj $\xrightarrow{}$ PRP [0.1] thus P(PRP$|$Adj) = 0.1
+            \item [(TP6)] Adj $\xrightarrow{}$ N [0.6] thus P(N$|$Adj) = 0.6
+        \end{itemize}
+        \item [2.] NP $\xrightarrow{}$ VP\newline
+        Again, as I've said before, VP is not part of the set of states. To handle that, we can replace VP with its production rules instead: NP $\xrightarrow{}$ V NP, VP $\xrightarrow{}$ Aux V NP. Notice that we will go to VP only if the previous state is PRP or N (if it's Adj we have to recurse for NP). Thus, we will have these transmission probabilities:
+        \begin{itemize}
+            \item [(TP7)] PRP $\xrightarrow{}$ V [0.8] thus P(V$|$PRP) = 0.8
+            \item [(TP8)] PRP $\xrightarrow{}$ Aux [0.2] thus P(Aux$|$PRP) = 0.2
+            \item [(TP9)] N $\xrightarrow{}$ V [0.8] thus P(V$|$N) = 0.8
+            \item [(TP10)] N $\xrightarrow{}$ Aux [0.2] thus P(Aux$|$N) = 0.2
+        \end{itemize}
+        Next, we know that Aux will always be followed by V, so:
+        \begin{itemize}
+            \item [(TP11)] Aux $\xrightarrow{}$ V [1.0] thus P(V$|$Aux) = 1.0
+        \end{itemize}
+        Finally, V is always followed by NP, and we can then again divide the transitions into three cases:
+        \begin{itemize}
+            \item [(TP12)] V $\xrightarrow{}$ Adj [0.3] thus P(Adj$|$V) = 0.3
+            \item [(TP13)] V $\xrightarrow{}$ PRP [0.1] thus P(PRP$|$V) = 0.1
+            \item [(TP14)] V $\xrightarrow{}$ N [0.6] thus P(N$|$V) = 0.6
+        \end{itemize}
+    \end{itemize}
+    These are valid probabilities because the probability of every transition that starts with the same state will sum to one. We can now calculate the emission probabilities which are far more easier, we can just copy them from PCFG:
+    \begin{itemize}
+        \item [(EP1)] PRP $\xrightarrow{}$ they [1.0] thus P(they$|$PRP) = 1.0
+        \item [(EP2)] N $\xrightarrow{}$ potatoes [1.0] thus P(potatoes$|$N) = 1.0
+        \item [(EP3)] Adj $\xrightarrow{}$ baking [1.0] thus P(baking$|$Adj) = 1.0
+        \item [(EP4)] V $\xrightarrow{}$ baking [0.5] thus P(baking$|$V) = 0.5
+        \item [(EP5)] V $\xrightarrow{}$ are [0.5] thus P(are$|$V) = 0.5
+        \item [(EP6)] Aux $\xrightarrow{}$ are [1.0] thus P(are$|$Aux) = 1.0
+    \end{itemize}
+    To summarize, the HMM is defined as below:
+    \begin{itemize}
+        \item [1.] Set of states: \{S, Adj, PRP, N, V, Aux\}
+        \item [2.] Set of observations: \{they, potatoes, baking, are\}
+        \item [3.] Set of transition probabilities. There are 14 transition probabilities that are non zero, given by TP1 - TP14 which are already computed above. Three of them are the initial transition probabilities (TP1 - TP3).
+        \item [4.] Set of emission probabilities. There are 6 emission probabilities that are non zero, given by EP1 - EP6 which are already computed above.
+    \end{itemize}
+    \item[c.] Clue language: Cari modifikasi dari PCFG di Problem 2 yg gabisa dibikin HMMnya, pake a\^nb\^n ae.
+\end{itemize}
+
+\newpage
+\section*{Problem 2}
+Symbols used for this problem:
+\begin{itemize}
+    \item [-] Sn $\xrightarrow{}$ state number, e.g. S1
+    \item [-] Chart[i] $\xrightarrow{}$ parser chart for position i, e.g. Chart[0]
+    \item [-] Op $\xrightarrow{}$ operation that creates the state, e.g. Op: Predict
+    \item [-] w[i] $\xrightarrow{}$ word at index i, e.g. w[0] = "they"
+\end{itemize}
+Below is the full chart:
+\begin{itemize}
+    \item [-] Chart[0]
+    \begin{itemize}
+        \item [S1] $\text{ }$ S $\xrightarrow{}$ . NP VP [0,0] $\text{ }$ Op: Predict
+        \item [S2] $\text{ }$ NP $\xrightarrow{}$ . Adj NP [0,0] $\text{ }$ Op: Predict S1
+        \item [S3] $\text{ }$ NP $\xrightarrow{}$ . PRP [0,0] $\text{ }$ Op: Predict S1
+        \item [S4] $\text{ }$ NP $\xrightarrow{}$ . N [0,0] $\text{ }$ Op: Predict S1
+        \item [S5] $\text{ }$ Adj $\xrightarrow{}$ . baking [0,0] $\text{ }$ Op: Predict S2
+        \item [S6] $\text{ }$ PRP $\xrightarrow{}$ . they [0,0] $\text{ }$ Op: Predict S3
+        \item [S7] $\text{ }$ N $\xrightarrow{}$ . potatoes [0,0] $\text{ }$ Op: Predict S4
+    \end{itemize}
+    Chart[0] is done. Since w[0] = "they", scan operation on S5 and S7 will fail. Scan operation on S6 will succeed, and we add shifted S6 to Chart[1].
+    \item [-] Chart[1]
+    \begin{itemize}
+        \item [S7] $\text{ }$ PRP $\xrightarrow{}$ they . [0,1] $\text{ }$ Op: Scan S6
+        \item [S8] $\text{ }$ NP $\xrightarrow{}$ PRP . [0,1] $\text{ }$ Op: Complete S7
+        \item [S9] $\text{ }$ S $\xrightarrow{}$ NP . VP [0,1] $\text{ }$ Op: Complete S8
+        \item [S10] $\text{ }$ VP $\xrightarrow{}$ . V NP [1,1] $\text{ }$ Op: Predict S9
+        \item [S11] $\text{ }$ VP $\xrightarrow{}$ . Aux V NP [1,1] $\text{ }$ Op: Predict S9
+        \item [S12] $\text{ }$ V $\xrightarrow{}$ . baking [1,1] $\text{ }$ Op: Predict S10
+        \item [S13] $\text{ }$ V $\xrightarrow{}$ . are [1,1] $\text{ }$ Op: Predict S10
+        \item [S14] $\text{ }$ Aux $\xrightarrow{}$ . are [1,1] $\text{ }$ Op: Predict S11
+    \end{itemize}
+    Chart[1] is done. Since w[1] = "are", scan operation on S12 will fail. Scan operation on S13 and S14 will succeed, and we add shifted S13 and S14 to Chart[2].\newline\newline
+    \item [-] Chart[2]
+    \begin{itemize}
+        \item [S] $\text{ }$ V $\xrightarrow{}$ are . [1,2] $\text{ }$ Op: Scan
+        \item [S] $\text{ }$ Aux $\xrightarrow{}$ are . [1,2] $\text{ }$ Op: Scan
+        \item [S] $\text{ }$ VP $\xrightarrow{}$ V . NP [1,2] $\text{ }$ Op: Complete
+        \item [S] $\text{ }$ VP $\xrightarrow{}$ Aux . V NP [1,2] $\text{ }$ Op: Complete
+        \item [S] $\text{ }$ S $\xrightarrow{}$ NP VP . [0,2] $\text{ }$ Op: Complete
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ . Adj NP [2,2] $\text{ }$ Op: Predict
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ . PRP [2,2] $\text{ }$ Op: Predict
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ . N [2,2] $\text{ }$ Op: Predict
+        \item [S] $\text{ }$ V $\xrightarrow{}$ . baking [2,2] $\text{ }$ Op: Predict
+        \item [S] $\text{ }$ Adj $\xrightarrow{}$ . baking [2,2] $\text{ }$ Op: Predict
+        \item [S] $\text{ }$ PRP $\xrightarrow{}$ . they [2,2] $\text{ }$ Op: Predict
+        \item [S] $\text{ }$ N $\xrightarrow{}$ . potatoes [2,2] $\text{ }$ Op: Predict
+    \end{itemize}
+    Chart[2] is done. Since w[2] = "baking", scan operation on S24 and S25 will fail. Scan operation on S22 and S23 will succeed, and we add shifted S22 and S23 to Chart[3].
+    \item [-] Chart[3]
+    \begin{itemize}
+        \item [S] $\text{ }$ V $\xrightarrow{}$ baking . [2,3] $\text{ }$ Op: Scan S
+        \item [S] $\text{ }$ Adj $\xrightarrow{}$ baking . [2,3] $\text{ }$ Op: Scan S
+        \item [S] $\text{ }$ VP $\xrightarrow{}$ Aux V . NP [1,3] $\text{ }$ Op: Complete S
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ Adj . NP [2,3] $\text{ }$ Op: Complete S
+        \item [S] $\text{ }$ S $\xrightarrow{}$ NP VP . [0,3] $\text{ }$ Op: Complete S
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ . Adj NP [3,3] $\text{ }$ Op: Predict S
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ . PRP [3,3] $\text{ }$ Op: Predict S
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ . N [3,3] $\text{ }$ Op: Predict S
+        \item [S] $\text{ }$ Adj $\xrightarrow{}$ . baking [3,3] $\text{ }$ Op: Predict S
+        \item [S] $\text{ }$ PRP $\xrightarrow{}$ . they [3,3] $\text{ }$ Op: Predict S
+        \item [S] $\text{ }$ N $\xrightarrow{}$ . potatoes [3,3] $\text{ }$ Op: Predict S
+    \end{itemize}
+    Chart[3] is done. Since w[3] = "potatoes", scan operation on S33, S34, S36 and S37 will fail. Scan operation on S35 will succeed, and we add shifted S35 to Chart[4].
+    \item [-] Chart[4]
+    \begin{itemize}
+        \item [S] $\text{ }$ N $\xrightarrow{}$ potatoes . [3,4] $\text{ }$ Op: Scan S
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ N . [3,4] $\text{ }$ Op: Complete S
+        \item [S] $\text{ }$ VP $\xrightarrow{}$ Aux V NP . [1,4] $\text{ }$ Op: Complete S
+        \item [S] $\text{ }$ NP $\xrightarrow{}$ Adj NP . [2,4] $\text{ }$ Op: Complete S
+        \item [S] $\text{ }$ VP $\xrightarrow{}$ V NP . [1,4] $\text{ }$ Op: Complete S
+        \item [S] $\text{ }$ S $\xrightarrow{}$ VP NP . [0,4] $\text{ }$ Op: Complete S
+        \item [S] $\text{ }$ S $\xrightarrow{}$ VP NP . [0,4] $\text{ }$ Op: Complete S
+    \end{itemize}
+    Chart[4] is done.
+    \item[b.] There are two parse trees that can be drawn as below.
+    \begin{itemize}
+        \item[1.]
+        \begin{center}
+            \Tree[.{S $\xrightarrow{}$ NP VP [1.0]} [.{NP $\xrightarrow{}$ PRP [0.1]} {PRP $\xrightarrow{}$ they [1.0]} ]
+          [.{VP $\xrightarrow{}$ V NP [0.8]} [.{V $\xrightarrow{}$ are [0.5]} ]
+                [.{NP $\xrightarrow{}$ Adj NP [0.3]} [ .{Adj $\xrightarrow{}$ baking [1.0]} ] [.{NP $\xrightarrow{}$ N [0.6]} {N $\xrightarrow{}$ potatoes [1.0]} ]]]]
+        \end{center}
+        $$$$
+        The first parse tree probability according to PCFG is:\newl
+        $$P(t_1)=\prod_{i=1}^9P(A_i\xrightarrow{}B_i)=(1.0)(0.1)(1.0)(0.8)(0.5)(0.3)(1.0)(0.6)(1.0)=\boldsymbol{0.0072}$$
+        \item[2.]
+        \begin{center}
+            \Tree[ .{S $\xrightarrow{}$ NP VP [1.0]} [ .{NP $\xrightarrow{}$ PRP [0.1]} {PRP $\xrightarrow{}$ they [1.0]} ] [ .{VP $\xrightarrow{}$ Aux V NP [0.2]} [ [ .{Aux $\xrightarrow{}$ are [1.0]} ] [ .{V $\xrightarrow{}$ baking [0.5]} ] [.{NP $\xrightarrow{}$ N [0.6]} {N $\xrightarrow{}$ potatoes [1.0]} ] ] ] ]
+        \end{center}
+        $$$$
+        The second parse tree probability according to PCFG is:\newl
+        $$P(t_2)=\prod_{i=1}^8P(A_i\xrightarrow{}B_i)=(1.0)(0.1)(1.0)(0.2)(1.0)(0.5)(0.6)(1.0)=\boldsymbol{0.006}$$
+    \end{itemize}
+\end{itemize}
+
+\newpage
+
+\section*{Problem 3}
+\begin{itemize}
+    \item [a.] The general rules to convert an arbitrary CFG to CNF are as below:
+    \begin{itemize}
+        \item [1.] For a CFG rule A$\xrightarrow{}$B, we can simply replace B with its production rules. For example, if these are the production rules for B:
+        $$\text{B}\xrightarrow{}\text{CD}, \text{B}\xrightarrow{}\text{b (b is a terminal)}$$
+        Then, we will have:
+        $$\text{A}\xrightarrow{}\text{CD}, \text{A}\xrightarrow{}\text{b}$$
+        We can then remove B from our grammar. Note that we have to replace B with A if B appears on some other rules right hand side. For example, if there is a rule C$\xrightarrow{}$BD, then change it to C$\xrightarrow{}$AD.
+        \item [2.] For a CFG rule A$\xrightarrow{}$BCDE, we can introduce one or more new nonterminals (as needed), so that A will produce exactly two nonterminals. For example, let's create two new nonterminals F and G where they have these production rules:
+        $$\text{F}\xrightarrow{}\text{BC}, \text{G}\xrightarrow{}\text{DE}$$
+        Then, we will have:
+        $$\text{A}\xrightarrow{}\text{FG}$$
+
+        PCFG in Problem 2 has 3 rules that are needed to be modified in order to have a CNF form of the grammar. Below are the needed modifications:
+        \begin{itemize}
+            \item [1.] NP$\xrightarrow{}$PRP. We can use rule 1. There is only one production rule for PRP: PRP$\xrightarrow{}$they. Thus, the modification will be:
+            $$\text{NP}\xrightarrow{}\text{they}$$
+            We can then remove PRP from our language. Since PRP doesn't appear on any rule right hand side now, no further modification is needed.
+            \item [2.] NP$\xrightarrow{}$N. Using the same logic as above, knowing the production rule of N$\xrightarrow{}$potatoes, the modification will be:
+            $$\text{NP}\xrightarrow{}\text{potatoes}$$
+            We can then remove N from our language. Since N doesn't appear on any rule right hand side now, no further modification is needed.
+            \item [3.] VP$\xrightarrow{}$Aux V NP. We can use rule 2. Let's introduce a new nonterminal AV that has this production rule: AV$\xrightarrow{}$Aux V. Thus, we will have:
+            $$\text{VP}\xrightarrow{}\text{AV NP}$$
+        \end{itemize}
+    \end{itemize}
+    Finally, by applying above modifications, we will end up with this CNF:\newline
+    S $\xrightarrow{}$ NP VP [1.0]\newline
+    NP $\xrightarrow{}$ Adj NP [0.3]\newline
+    NP $\xrightarrow{}$ they [0.1]\newline
+    NP $\xrightarrow{}$ potatoes [0.6]\newline
+    VP $\xrightarrow{}$ V NP [0.8]\newline
+    VP $\xrightarrow{}$ AV NP [0.2]\newline
+    AV $\xrightarrow{}$ Aux V [1.0]\newline
+    Adj $\xrightarrow{}$ baking [1.0]\newline
+    V $\xrightarrow{}$ baking [0.5]\newline
+    V $\xrightarrow{}$ are [0.5]\newline
+    Aux $\xrightarrow{}$ are [1.0]\newline
+    \item[b.] The CKY chart is depicted below in Table 1. The symbol "X" means that there are no production rules that apply for that cell range. For example, in cell [0,2], NP V and NP Aux don't appear on any rules right hand side, so we put "X" there. Any nonterminal that is paired with X will also result in X. For example, X Adj and X V will all be X so we put X in cell [0,3]. This makes sense since there are no rules with one terminal on the right hand side for CNF.
+    \begin{table}[h!]
+        \begin{tabular}{|p{2.5cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|}
+            \hline
+             & 0 they 1 & 1 are 2 & 2 baking 3 & 3 potatoes 4\\[2.5ex]
+            \hline
+            0 & [0,1] NP & [0,2] X & [0,3] X & [0,4] S\\[2.5ex]
+            \hline
+            1 & & [1,2] V Aux & [1,3] AV & [1,4] VP\\[2.5ex]
+            \hline
+            2 & & & [2,3] Adj, V & [2,4] NP, VP\\[2.5ex]
+            \hline
+            3 & & & & [3,4] NP\\[2.5ex]
+            \hline
+        \end{tabular}
+        \caption{CKY Chart for "They are baking potatoes"}
+        \label{table:1}
+    \end{table}
+    \newline
+    I find it's a little bit messy to put the backpointers in the table, so I list them below.
+    \begin{itemize}
+        \item[1.] [1,3][AV] = [1,2][Aux] + [2,3][V]
+        \item[2.] [2,4][NP] = [2,3][Adj] + [3,4][NP]
+        \item[3.] [2,4][VP] = [2,3][V] + [3,4][NP]
+        \item[4.] [1,4][VP] = [1,2][V] + [2,4][NP]
+        \item[5.] [1,4][VP] = [1,3][AV] + [3,4][NP]
+        \item[6.] [0,4][S] = [0,1][NP] + [1,4][VP]
+    \end{itemize}
+
+    There are two parse trees yielded:
+    \begin{itemize}
+        \item[1.]
+        \begin{center}
+            \Tree[ .S [ .NP they ] [ .VP [ .V are ] [.NP [ .Adj baking ] [ .NP potatoes ] ] ] ]
+        \end{center}
+        The first parse tree is as above. This somehow makes less sense since "baking potatoes" is treated as a noun phrase that explains the subject "they", something very unlikely in the real world.
+        $$$$
+        \item[2.]
+        \begin{center}
+            \Tree[ .S [ .NP they ] [ .VP [ .AV [ .Aux are ] [ .V baking ] ] [ .NP potatoes ] ] ]
+        \end{center}
+        $$$$
+        The second parse tree is as above. This is the better parse tree in my opinion since "baking" is more probable to act as a verb in this sentence.
+    \end{itemize}
+\end{itemize}
+\newpage
+
+\section*{Problem 4}
+Let S0 be our initial state as described in the problem.
+\begin{itemize}
+    \item [S0] Next Operation: SHIFT
+    $$([\text{\boldsymbol{root}}]_\sigma, [\text{he, sent, her, a, funny, meme, today}]_\beta, []_\alpha)$$
+    \item [S1] Next Operation: LEFT ARC
+    $$([\text{\boldsymbol{root}, he}]_\sigma, [\text{sent, her, a, funny, meme, today}]_\beta, []_\alpha)$$
+    \item [S2] Next Operation: SHIFT
+    $$([\text{\boldsymbol{root}}]_\sigma, [\text{sent, her, a, funny, meme, today}]_\beta, [\text{\{sent, r, he\}}]_\alpha)$$
+    \item [S3] Next Operation: RIGHT ARC
+    $$([\text{\boldsymbol{root}, sent}]_\sigma, [\text{her, a, funny, meme, today}]_\beta, [\text{\{sent, r, he\}}]_\alpha)$$
+    \item [S4] Next Operation: SHIFT
+    $$([\text{\boldsymbol{root}}]_\sigma, [\text{sent, a, funny, meme, today}]_\beta, [\text{\{sent, r, he\}, \{sent, r, her\}}]_\alpha)$$
+    \item [S5] Next Operation: SHIFT
+    $$([\text{\boldsymbol{root}, sent}]_\sigma, [\text{a, funny, meme, today}]_\beta, [\text{\{sent, r, he\}, \{sent, r, her\}}]_\alpha)$$
+    \item [S6] Next Operation: SHIFT
+    $$([\text{\boldsymbol{root}, sent, a}]_\sigma, [\text{funny, meme, today}]_\beta, [\text{\{sent, r, he\}, \{sent, r, her\}}]_\alpha)$$
+    \item [S7] Next Operation: LEFT ARC
+    $$([\text{\boldsymbol{root}, sent, a, funny}]_\sigma, [\text{meme, today}]_\beta, [\text{\{sent, r, he\}, \{sent, r, her\}}]_\alpha)$$
+    \item [S8] Next Operation: LEFT ARC
+    $$([\text{\boldsymbol{root}, sent, a}]_\sigma, [\text{meme, today}]_\beta, [\text{\{sent, r, he\}, \{sent, r, her\}, \{meme, r, funny\}}]_\alpha)$$
+    \item [S9] Next Operation: RIGHT ARC
+    $$([\text{\boldsymbol{root}, sent}]_\sigma, [\text{meme, today}]_\beta, [\text{\{sent, r, he\}, \{sent, r, her\}, \{meme, r, funny\}, \{meme, r, a\}}]_\alpha)$$
+    \item [S10] Next Operation: SHIFT\newline\newline
+    ([\boldsymbol{root}]$_\sigma$, [sent, today]$_\beta$, [\{sent, r, he\}, \{sent, r, her\}, \{meme, r, funny\}, \{meme, r, a\}, \{sent, r, meme\}]$_\alpha)$
+    \item [S11] Next Operation: RIGHT ARC\newline\newline
+    ([\boldsymbol{root}, sent]$_\sigma$, [today]$_\beta$, [\{sent, r, he\}, \{sent, r, her\}, \{meme, r, funny\}, \{meme, r, a\}, \{sent, r, meme\}]$_\alpha)$
+    \item [S12] Next Operation: RIGHT ARC\newline\newline
+    ([\boldsymbol{root}]$_\sigma$, [sent]$_\beta$, [\{sent, r, he\}, \{sent, r, her\}, \{meme, r, funny\}, \{meme, r, a\}, \{sent, r, meme\}, \{sent, r, today\}]$_\alpha)$
+    \item [S13] Next Operation: SHIFT\newline\newline
+    ([]$_\sigma$, [\boldsymbol{root}]$_\beta$, [\{sent, r, he\}, \{sent, r, her\}, \{meme, r, funny\}, \{meme, r, a\}, \{sent, r, meme\}, \{sent, r, today\}, \{\boldsymbol{root}, r, sent\}]$_\alpha)$
+    \item [S14] Next Operation: -. \newline\newline
+    ([\boldsymbol{root}]$_\sigma$, []$_\beta$, [\{sent, r, he\}, \{sent, r, her\}, \{meme, r, funny\}, \{meme, r, a\}, \{sent, r, meme\}, \{sent, r, today\}, \{\boldsymbol{root}, r, sent\}]$_\alpha)$\newline\newline
+    Buffer is empty and stack contains single word (root). Terminal condition is reached.
+\end{itemize}
+
+\newpage
+\end{document}
