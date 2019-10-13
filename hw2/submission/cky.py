@@ -141,9 +141,9 @@ class CkyParser(object):
                                     new_nonterminal = rule[0]
                                     parse_table[(i, j,)][new_nonterminal] = ()
 
-        # Check if there is nonterminal 'TOP' in the whole span
+        # Check if there is a start symbol in the whole span
         # It indicates whether or not a sentence belongs to the grammar/language
-        return 'TOP' in parse_table[(0, len(tokens), )]
+        return self.grammar.startsymbol in parse_table[(0, len(tokens), )]
 
     def parse_with_backpointers(self, tokens):
         """
@@ -266,8 +266,7 @@ def get_tree(chart, i, j, nt):
         # Don't forget to add current parse result nt
         return ((nt, get_tree(chart, left_i, left_j, left_nt), get_tree(chart, right_i, right_j, right_nt), ))
 
-if __name__ == "__main__":
-
+if __name__ == '__main__':
     with open('atis3.pcfg','r') as grammar_file:
         grammar = Pcfg(grammar_file)
         parser = CkyParser(grammar)
@@ -280,10 +279,10 @@ if __name__ == "__main__":
         assert check_table_format(table)
         assert check_probs_format(probs)
 
-        print(table[(0, 6, )])
-        print(probs[(0, 6, )])
-        print(table[(0, 5, )])
-        print(probs[(0, 5, )])
-        print('-----------------')
+        # print(table[(0, 6, )])
+        # print(probs[(0, 6, )])
+        # print(table[(0, 5, )])
+        # print(probs[(0, 5, )])
 
-        print(get_tree(table, 0, len(toks), 'TOP'))
+        print('--------------------------------------------------')
+        print(get_tree(table, 0, len(toks), grammar.startsymbol))

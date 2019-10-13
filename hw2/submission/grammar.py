@@ -107,7 +107,7 @@ class Pcfg(object):
         # Reference: https://piazza.com/class/k09vvrvx2l846o?cid=108
         return math.isclose(total_probability, float(1.0), abs_tol=0.0001)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(sys.argv) > 1:
         grammar_filepath = sys.argv[1]
     else:
