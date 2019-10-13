@@ -53,7 +53,7 @@ class Pcfg(object):
         """
         for nonterminal in self.lhs_to_rules:
             # First, check if nonterminal follows the format, i.e. all uppercase
-            if not self.check_nonterminal_format(nonterminal):
+            if not self.check_nonterminal(nonterminal):
                 print('The first nonterminal to not follow the format: ' + nonterminal)
                 return False
 
@@ -69,16 +69,12 @@ class Pcfg(object):
 
         return True
 
-    def check_nonterminal_format(self, nonterminal):
-        # A nonterminal should all be uppercase
-        return nonterminal.isupper()
+    def check_nonterminal(self, nonterminal):
+        # A nonterminal should all be uppercase and should also appear on some rules lhs
+        return nonterminal.isupper() and nonterminal in self.lhs_to_rules
 
     def check_terminal_valid(self, terminal):
         # A terminal should not exist on the lhs
-        # if terminal == 'display':
-        #     print(terminal)
-        #     print(self.lhs_to_rules[terminal])
-        #     print(self.rhs_to_rules[(terminal,)])
         return terminal not in self.lhs_to_rules
 
     def check_production_rules(self, production_triplets):
@@ -87,7 +83,7 @@ class Pcfg(object):
 
             # The production rule needs to be either two nonterminals or a terminal
             if len(production_rule) == 2:
-                if not (self.check_nonterminal_format(production_rule[0]) and self.check_nonterminal_format(production_rule[1])):
+                if not (self.check_nonterminal(production_rule[0]) and self.check_nonterminal(production_rule[1])):
                     return False
             elif len(production_rule) == 1:
                 if not self.check_terminal_valid(production_rule[0]):
@@ -120,7 +116,15 @@ if __name__ == "__main__":
     with open(grammar_filepath,'r') as grammar_file:
         grammar = Pcfg(grammar_file)
 
-    # print(Number of nonterminalslen(grammar.lhs_to_rules))
-    # print('-----------------------------------')
+    if grammar.verify_grammar():
+        print('-----------------------------------')
+        print('The grammar is a VALID PCFG in CNF')
+    else:
+        print('-----------------------------------')
+        sys.stderr.write('The grammar is an INVALID PCFG IN CNF!\n')
 
-    print(grammar.verify_grammar())
+    # assert grammar.check_production_rules([('NP', ('NP', 'VP', ), 0.006), ('NP', ('flight', ), 0.004)])
+    #
+    # assert not grammar.check_production_rules([('NP', ('VP', ), 0.006)])
+    # assert not grammar.check_production_rules([('NP', ('flight', 'to', ), 0.004)])
+    # assert not grammar.check_production_rules([('NP', (), 0.0)])
