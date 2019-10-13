@@ -1,26 +1,27 @@
-# Some assumptions/design decisions I made for this coding assignment:
+# Get started:
 
-- Part 1
+- No need to install any library (all are built-in libraries in Python 3)
+- Please put the 'atis3.pcfg' and 'atis3_test.ptb' data file in the same directory as the Python files
 
-  Other than checking if nonterminal symbols are upper-case and
-  the probabilities for the same lhs symbol sum to 1.0, I also check:
+# Some assumptions/design decisions that I made for this coding assignment:
 
-  1. For each production rule triplet, the rhs should be
-  two nonterminals or a terminal.
+- Part 1 (Sum of probabilities should be equal to 1)
+
+  1. Two floats are considered the same if their difference is less than 0.0001.
+  Reference: https://piazza.com/class/k09vvrvx2l846o?cid=108
+
+  2. Other than checking if nonterminal symbols are upper-case and the probabilities
+  for the same LHS symbol sum to 1, I also check that for each production rule:
+    a. The RHS should be either two nonterminals or a terminal.
+    b. A nonterminal is valid if it appears in some LHS.
+    c. A terminal is valid if it doesn't appear in any LHS.
+    Reference: https://piazza.com/class/k09vvrvx2l846o?cid=110
 
   Valid examples:
-  - ('NP', ('NP', 'VP'), 0.006)
-  - ('NP', ('flight'), 0.004)
+  - ('NP', ('NP', 'VP', ), 0.006)
+  - ('NP', ('flight', ), 0.004)
 
   Invalid examples:
-  - ('NP', ('VP'), 0.006)
-  - ('NP', ('flight', 'to'), 0.004)
-  - ('NP', (), 0.0)
-
-  2. For nonterminal,
-
-- Part 3
-
-  # Example of a backpointer value:
-  # Let say we want to define backpointer for parse_table[(0, 3,)]['NP']
-  # It is something like (('NP', 0, 2), ('PP', 2, 3),)
+  - ('NP', ('VP', ), 0.006)
+  - ('NP', ('flight', 'to', ), 0.004)
+  - ('NP', (), 0.0) -> empty production rule
