@@ -271,7 +271,7 @@ if __name__ == '__main__':
         grammar = Pcfg(grammar_file)
         parser = CkyParser(grammar)
 
-        toks =['flights', 'from','miami', 'to', 'cleveland','.']
+        toks = ['flights', 'from', 'miami', 'to', 'cleveland', '.']
         print(parser.is_in_language(toks))
         print(parser.is_in_language('miami flights cleveland from to .'.split(' ')))
 

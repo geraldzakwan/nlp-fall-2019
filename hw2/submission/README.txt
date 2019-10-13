@@ -25,3 +25,7 @@
   - ('NP', ('VP', ), 0.006)
   - ('NP', ('flight', 'to', ), 0.004)
   - ('NP', (), 0.0) -> empty production rule
+
+# Final result
+# Run python evaluate_parser.py atis3.pcfg atis3_test.ptb
+Coverage: 67.24%, Average F-score (parsed sentences): 0.9504475408614075, Average F-score (all sentences): 0.6390940360964636
