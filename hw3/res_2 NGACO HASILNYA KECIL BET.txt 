@@ -1,0 +1,16 @@
+(venv) Kartikos-MBP:hw3 kartiko$ python evaluate.py data/model.h5 data/dev.conll
+Using TensorFlow backend.
+2019-11-04 00:56:49.756379: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2019-11-04 00:56:49.766856: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x133aa5460 executing computations on platform Host. Devices:
+2019-11-04 00:56:49.766874: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+/Users/kartiko/iCloud Drive (Archive)/Desktop/workspace/venv/lib/python3.5/site-packages/tensorflow_core/python/framework/indexed_slices.py:424: UserWarning: Converting sparse IndexedSlices to a dense Tensor of unknown shape. This may consume a large amount of memory.
+  "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
+Evaluating. (Each . represents 100 test dependency trees)
+..................................................
+5039 sentence.
+
+Micro Avg. Labeled Attachment Score: 2.487500310937539e-05
+Micro Avg. Unlabeled Attachment Score: 0.25653590706698837
+
+Macro Avg. Labeled Attachment Score: 1.802719699252995e-05
+Macro Avg. Unlabeled Attachment Score: 0.2565859057508941`
