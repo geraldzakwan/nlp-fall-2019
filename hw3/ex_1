@@ -1,0 +1,6 @@
+WORDS
+[None, 'BUSH', 'AND', 'GORBACHEV', 'WILL', 'HOLD', 'two', 'days', 'of', 'informal', 'talks', 'next', 'month', '.']
+POS
+[None, 'NNP', 'CC', 'NNP', 'MD', 'VB', 'CD', 'NNS', 'IN', 'JJ', 'NNS', 'JJ', 'NN', '.']
+STATE
+[0],[13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1],set()
