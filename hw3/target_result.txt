@@ -1,0 +1,5 @@
+Micro Avg. Labeled Attachment Score: 0.653433165012479
+Micro Avg. Unlabeled Attachment Score: 0.7174365480129018
+
+Macro Avg. Labeled Attachment Score: 0.6562488345815077
+Macro Avg. Unlabeled Attachment Score: 0.7221832284219722

@@ -44,7 +44,15 @@ class Parser(object):
         # print(action_prob_tuples)
 
         # Sort by probability
-        return sorted(action_prob_tuples, key=lambda x: x[1])
+
+        # IMPORTANT, SORT DESCENDINGLY WKWKWKWK
+        # IF NOT, GET SOMETHING VERY VERY LOW:
+        # Micro Avg. Labeled Attachment Score: 2.487500310937539e-05
+        # Micro Avg. Unlabeled Attachment Score: 0.25653590706698837
+        #
+        # Macro Avg. Labeled Attachment Score: 1.802719699252995e-05
+        # Macro Avg. Unlabeled Attachment Score: 0.2565859057508941
+        return sorted(action_prob_tuples, key=lambda x: x[1], reverse=True)
 
     def parse_sentence(self, words, pos):
         state = State(range(1,len(words)))
