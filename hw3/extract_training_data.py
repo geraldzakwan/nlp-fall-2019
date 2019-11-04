@@ -136,6 +136,11 @@ class FeatureExtractor(object):
                     # Append index of '<ROOT>'
                     word_indices.append(self.word_vocab['<ROOT>'])
                 else:
+                    # IMPORTANT: If not lowers the word, words like 'AND', 'WILL'
+                    # and any first word starting with capital letter e.g. 'The'
+                    # will be treated as UNK. This will lower the score to 61-68
+                    word = word.lower()
+
                     # Check special case for <CD> and <NNP>
                     if pos[word_idx_from_stack] == 'CD':
                         # Append index of 'CD'
