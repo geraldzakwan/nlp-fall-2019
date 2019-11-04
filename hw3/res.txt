@@ -1,0 +1,19 @@
+(venv) Kartikos-MBP:hw3 kartiko$ python train_model.py data/input_train.npy data/target_train.npy data/model.h5
+Using TensorFlow backend.
+Compiling model.
+2019-11-03 22:27:10.850474: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2019-11-03 22:27:10.873871: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x13355f6a0 executing computations on platform Host. Devices:
+2019-11-03 22:27:10.873897: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+Done loading data.
+/Users/kartiko/iCloud Drive (Archive)/Desktop/workspace/venv/lib/python3.5/site-packages/tensorflow_core/python/framework/indexed_slices.py:424: UserWarning: Converting sparse IndexedSlices to a dense Tensor of unknown shape. This may consume a large amount of memory.
+  "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
+Epoch 1/5
+1899519/1899519 [==============================] - 92s 49us/step - loss: 0.5570
+Epoch 2/5
+1899519/1899519 [==============================] - 100s 53us/step - loss: 0.4773
+Epoch 3/5
+1899519/1899519 [==============================] - 99s 52us/step - loss: 0.4596
+Epoch 4/5
+1899519/1899519 [==============================] - 92s 49us/step - loss: 0.4479
+Epoch 5/5
+1899519/1899519 [==============================] - 92s 48us/step - loss: 0.4424

@@ -8,8 +8,15 @@ from keras.layers import Flatten, Embedding, Dense
 def build_model(word_types, pos_types, outputs):
     # TODO: Write this function for part 3
     model = Sequential()
-    #model.add(...)
-    model.compile(keras.optimizers.Adam(lr=0.01), loss="categorical_crossentropy")
+    # 15153 -> Number of possible words, see words.vocab
+    # 32 -> Embedding dimension
+    # 6 -> input, e.g. the word index from top 3 stack and buffer
+    model.add(Embedding(15153, 32, input_length=6))
+    model.add(Flatten())
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(91, activation='softmax'))
+    model.compile(keras.optimizers.Adam(lr=0.01), loss='categorical_crossentropy')
     return model
 
 
@@ -20,10 +27,10 @@ if __name__ == "__main__":
 
     try:
         word_vocab_f = open(WORD_VOCAB_FILE,'r')
-        pos_vocab_f = open(POS_VOCAB_FILE,'r') 
+        pos_vocab_f = open(POS_VOCAB_FILE,'r')
     except FileNotFoundError:
         print("Could not find vocabulary files {} and {}".format(WORD_VOCAB_FILE, POS_VOCAB_FILE))
-        sys.exit(1) 
+        sys.exit(1)
 
     extractor = FeatureExtractor(word_vocab_f, pos_vocab_f)
     print("Compiling model.")
@@ -31,8 +38,8 @@ if __name__ == "__main__":
     inputs = np.load(sys.argv[1])
     outputs = np.load(sys.argv[2])
     print("Done loading data.")
-   
+
     # Now train the model
     model.fit(inputs, outputs, epochs=5, batch_size=100)
-    
+
     model.save(sys.argv[3])
