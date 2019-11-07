@@ -5,22 +5,22 @@ import keras
 from keras import Sequential
 from keras.layers import Flatten, Embedding, Dense
 
-def build_model(word_types, pos_types, outputs):
+def build_model(word_types, pos_types, outputs, input_length=6, embedding_dim=32):
     # TODO: Write this function for part 3
 
     # Build a keras Sequential model
     model = Sequential()
 
     # word_types -> Number of words (including special cases) in the dictionary
-    # See words.vocab. 15153 is the word_types value for basic configuration
-    # 32 -> Embedding dimension default value, can be customized
-    # 6 -> Input vector size, i.e. the word index from top 3 stack and buffer, can be customized
-    model.add(Embedding(word_types, 32, input_length=6))
+    # 15153 is the word_types value for the default configuration
+    # embedding_dim -> The word embedding dimension, default value is 32, can be customized
+    # input_length -> Input vector size. Default value is 6, i.e. taking 3 words from stack and buffer each, can be customized
+    model.add(Embedding(word_types, embedding_dim, input_length=input_length))
 
-    # Flatten layer to flatten the output, i.e. make it a 1d array
+    # Flatten layer to flatten the output, i.e. make it a 1D array
     model.add(Flatten())
 
-    # Two dense layers with 100 and 10 units respectively for basic configuration
+    # Two dense layers with 100 and 10 units respectively for the default configuration
     model.add(Dense(100, activation='relu'))
     model.add(Dense(10, activation='relu'))
 

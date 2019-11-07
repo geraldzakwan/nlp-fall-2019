@@ -114,7 +114,7 @@ class FeatureExtractor(object):
             vocab[word] = index
         return vocab
 
-    def get_input_representation(self, words, pos, state):
+    def get_input_representation(self, words, pos, state, top_words=3):
         # TODO: Write this method for Part 2
 
         # This will be the returned array (size: 2*3)
@@ -123,7 +123,7 @@ class FeatureExtractor(object):
         word_indices = []
 
         # Take the top three words from stack and append them as indexes to word_indices
-        for i in range(1, 4):
+        for i in range(1, top_words+1):
             # Check if we need to pad, i.e. when stack has less than three words
             # Use '<NULL>' for padding.
             if len(state.stack) < i:
@@ -169,7 +169,7 @@ class FeatureExtractor(object):
 
         # Take the next three words from buffer and append them as indexes to word_indices
         # All the steps are the same as above so I'm not commenting the codes below
-        for i in range(1, 4):
+        for i in range(1, top_words+1):
             if len(state.buffer) < i:
                 word_indices.append(self.word_vocab['<NULL>'])
             else:
