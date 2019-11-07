@@ -1,0 +1,35 @@
+(venv) Kartikos-MBP:hw3 kartiko$ python train_model.py data/input_train.npy data/target_train.npy data/model.h5
+Using TensorFlow backend.
+Compiling model.
+2019-11-06 20:53:54.820275: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2019-11-06 20:53:54.831956: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x138e029c0 executing computations on platform Host. Devices:
+2019-11-06 20:53:54.831985: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+Done loading data.
+/Users/kartiko/iCloud Drive (Archive)/Desktop/workspace/venv/lib/python3.5/site-packages/tensorflow_core/python/framework/indexed_slices.py:424: UserWarning: Converting sparse IndexedSlices to a dense Tensor of unknown shape. This may consume a large amount of memory.
+  "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
+Epoch 1/5
+1899519/1899519 [==============================] - 88s 46us/step - loss: 0.4989
+Epoch 2/5
+1899519/1899519 [==============================] - 87s 46us/step - loss: 0.4214
+Epoch 3/5
+1899519/1899519 [==============================] - 87s 46us/step - loss: 0.4058
+Epoch 4/5
+1899519/1899519 [==============================] - 89s 47us/step - loss: 0.4003
+Epoch 5/5
+1899519/1899519 [==============================] - 88s 47us/step - loss: 0.3947
+(venv) Kartikos-MBP:hw3 kartiko$ python evaluate.py data/model.h5 data/dev.conll
+Using TensorFlow backend.
+2019-11-06 21:01:38.302363: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2019-11-06 21:01:38.313805: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x136e89c20 executing computations on platform Host. Devices:
+2019-11-06 21:01:38.313823: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+/Users/kartiko/iCloud Drive (Archive)/Desktop/workspace/venv/lib/python3.5/site-packages/tensorflow_core/python/framework/indexed_slices.py:424: UserWarning: Converting sparse IndexedSlices to a dense Tensor of unknown shape. This may consume a large amount of memory.
+  "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
+Evaluating. (Each . represents 100 test dependency trees)
+..................................................
+5039 sentence.
+
+Micro Avg. Labeled Attachment Score: 0.6345613293201662
+Micro Avg. Unlabeled Attachment Score: 0.6900325862540733
+
+Macro Avg. Labeled Attachment Score: 0.6370488037825801
+Macro Avg. Unlabeled Attachment Score: 0.6931834901498892
