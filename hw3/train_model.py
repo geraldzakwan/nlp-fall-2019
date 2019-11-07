@@ -7,16 +7,30 @@ from keras.layers import Flatten, Embedding, Dense
 
 def build_model(word_types, pos_types, outputs):
     # TODO: Write this function for part 3
+
+    # Build a keras Sequential model
     model = Sequential()
-    # 15153 -> Number of possible words, see words.vocab
-    # 32 -> Embedding dimension
-    # 6 -> input, e.g. the word index from top 3 stack and buffer
-    model.add(Embedding(15153, 32, input_length=6))
+
+    # word_types -> Number of words (including special cases) in the dictionary
+    # See words.vocab. 15153 is the word_types value for basic configuration
+    # 32 -> Embedding dimension default value, can be customized
+    # 6 -> Input vector size, i.e. the word index from top 3 stack and buffer, can be customized
+    model.add(Embedding(word_types, 32, input_length=6))
+
+    # Flatten layer to flatten the output, i.e. make it a 1d array
     model.add(Flatten())
+
+    # Two dense layers with 100 and 10 units respectively for basic configuration
     model.add(Dense(100, activation='relu'))
     model.add(Dense(10, activation='relu'))
-    model.add(Dense(91, activation='softmax'))
+
+    # Add a dense output layer with 91 (output_labels) units
+    model.add(Dense(output_labels, activation='softmax'))
+
+    # Compile the model with an optimizer and a loss function
+    # Default optimizer is Adam with learning rate = 0.01
     model.compile(keras.optimizers.Adam(lr=0.01), loss='categorical_crossentropy')
+
     return model
 
 
