@@ -42,8 +42,8 @@ class Parser(object):
     # Explanation for this function is provided in the README.txt
     def sort_output(self, softmax_output):
         # Create list of tuple (action, probability)
-        # Use self.output_labels list which is kindly provided by Prof. Benajiba
-        # to map index in softmax_output to the action tuple
+        # Use self.output_labels list (which is kindly provided)
+        # to map index in the softmax_output to the action tuple
         action_prob_tuples = []
         for i in range(0, len(softmax_output)):
             action_prob_tuples.append((self.output_labels[i], softmax_output[i]))

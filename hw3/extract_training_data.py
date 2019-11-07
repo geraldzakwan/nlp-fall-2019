@@ -2,7 +2,8 @@ from conll_reader import DependencyStructure, conll_reader
 from collections import defaultdict
 import copy
 import sys
-import keras
+# Keras is not used for this module
+# import keras
 import numpy as np
 
 class State(object):
@@ -28,7 +29,6 @@ class State(object):
         return "{},{},{}".format(self.stack, self.buffer, self.deps)
 
 
-
 def apply_sequence(seq, sentence):
     state = State(sentence)
     for rel, label in seq:
@@ -41,6 +41,7 @@ def apply_sequence(seq, sentence):
 
     return state.deps
 
+
 class RootDummy(object):
     def __init__(self):
         self.head = None
@@ -51,7 +52,6 @@ class RootDummy(object):
 
 
 def get_training_instances(dep_structure):
-
     deprels = dep_structure.deprels
 
     sorted_nodes = [k for k,v in sorted(deprels.items())]
@@ -116,103 +116,102 @@ class FeatureExtractor(object):
 
     def get_input_representation(self, words, pos, state):
         # TODO: Write this method for Part 2
+
+        # This will be the returned array (size: 2*3)
+        # The first three element corresponds to stack elements and
+        # the last three corresponds to buffer elements
         word_indices = []
 
-        # Take three top words from stack
+        # Take the top three words from stack and append them as indexes to word_indices
         for i in range(1, 4):
-            # Check if we need to pad, i.e. use <NULL>
+            # Check if we need to pad, i.e. when stack has less than three words
+            # Use '<NULL>' for padding.
             if len(state.stack) < i:
-                # Append index of '<NULL>'
+                # Append the index of '<NULL>'
                 word_indices.append(self.word_vocab['<NULL>'])
             else:
-                # Get the i-th top word from the stack
+                # Get the i-th top word index from the stack
                 word_idx_from_stack = state.stack[(-1)*i]
 
                 # Get the actual word from the sentence
                 word = words[word_idx_from_stack]
 
-                # Check special case for root
+                # None is used to represent '<ROOT>'
                 if word == None:
-                    # Append index of '<ROOT>'
+                    # Append the index of '<ROOT>'
                     word_indices.append(self.word_vocab['<ROOT>'])
                 else:
-                    # IMPORTANT: If not lowers the word, words like 'AND', 'WILL'
+                    # IMPORTANT: If the word is not lowered, words like 'AND', 'WILL'
                     # and any first word starting with capital letter e.g. 'The'
                     # will be treated as UNK. This will lower the score to 61-68
                     word = word.lower()
 
-                    # Check special case for <CD> and <NNP>
+                    # Check special case for words with POS tag: <CD> or <NNP>
+                    # In this case, append the index of the POS tag and not the word
                     if pos[word_idx_from_stack] == 'CD':
-                        # Append index of 'CD'
+                        # Append the index of 'CD'
                         word_indices.append(self.word_vocab['<CD>'])
                     elif pos[word_idx_from_stack] == 'NNP':
-                        # Append index of 'NNP'
+                        # Append the index of 'NNP'
                         word_indices.append(self.word_vocab['<NNP>'])
                     else:
-                        # Check if it exists in vocab:
+                        # This is the normal/typical case where we actually process a word
+                        # Check if the word exists in the vocabulary
                         if word in self.word_vocab:
-                            # Get the word index in vocab
+                            # If found, get the word index in the vocab
                             word_idx_from_vocab = self.word_vocab[word]
 
-                            # Append to return array
+                            # Append the index of the word
                             word_indices.append(word_idx_from_vocab)
                         else:
-                            # Append index of 'UNK'
+                            # If not found, append the index of '<UNK>' instead
                             word_indices.append(self.word_vocab['<UNK>'])
 
-        # Take next three words from buffer
+        # Take the next three words from buffer and append them as indexes to word_indices
+        # All the steps are the same as above so I'm not commenting the codes below
         for i in range(1, 4):
-            # Check if we need to pad, i.e. use <NULL>
             if len(state.buffer) < i:
-                # Append index of '<NULL>'
                 word_indices.append(self.word_vocab['<NULL>'])
             else:
-                # Get the i-th top word from the stack
                 word_idx_from_buffer = state.buffer[(-1)*i]
 
-                # Get the actual word from the sentence
                 word = words[word_idx_from_buffer]
 
-                # Check special case for root
                 if word == None:
-                    # Append index of '<ROOT>'
                     word_indices.append(self.word_vocab['<ROOT>'])
                 else:
-                    # Check special case for <CD> and <NNP>
                     if pos[word_idx_from_buffer] == 'CD':
-                        # Append index of 'CD'
                         word_indices.append(self.word_vocab['<CD>'])
                     elif pos[word_idx_from_buffer] == 'NNP':
-                        # Append index of 'NNP'
                         word_indices.append(self.word_vocab['<NNP>'])
                     else:
-                        # Check if it exists in vocab:
                         if word in self.word_vocab:
-                            # Get the word index in vocab
                             word_idx_from_vocab = self.word_vocab[word]
 
-                            # Append to return array
                             word_indices.append(word_idx_from_vocab)
                         else:
-                            # Append index of 'UNK'
                             word_indices.append(self.word_vocab['<UNK>'])
 
+        # Finally, return the list of word indexes
+        # Convert the list into a numpy array with type integer
         return np.array(word_indices, dtype='int')
 
     def get_output_representation(self, output_pair):
         # TODO: Write this method for Part 2
 
-        # Use the already computed output labels to get unique index
-        # for each transition, 0-90 inclusive
+        # Use the output_labels dictionary that is kindly provided
+        # to get a unique index for a transition tuple (output_pair).
+        # Index ranges inclusively from 0 to 90.
         transition_pair_index = self.output_labels[output_pair]
 
-        # Build the one hot encoding vector, fill the index with 1, rest are 0
+        # Create a one hot encoding vector as a numpy array with type integer
+        # of shape (91). Fill all the elements with zero.
         one_hot_encoded_transition = np.zeros(len(self.output_labels), dtype='int')
+
+        # Change the value to 1 only for the input transition index
         one_hot_encoded_transition[transition_pair_index] = 1
 
         return one_hot_encoded_transition
-        # return keras.utils.to_categorical(1, num_classes=len(self.output_labels), dtype='int')
-
 
 def get_training_matrices(extractor, in_file):
     inputs = []
@@ -221,34 +220,15 @@ def get_training_matrices(extractor, in_file):
     for dtree in conll_reader(in_file):
         words = dtree.words()
         pos = dtree.pos()
-
-        # print('WORDS')
-        # print(words)
-        #
-        # print('POS')
-        # print(pos)
-
         for state, output_pair in get_training_instances(dtree):
-            # print('STATE')
-            # print(state)
-            # print('INPUT REPRESENTATION')
-            # print(extractor.get_input_representation(words, pos, state))
-            # print('---------------------------------------------------')
             inputs.append(extractor.get_input_representation(words, pos, state))
-
-            # print('OUTPUT_PAIR')
-            # print(output_pair)
-            # print(extractor.get_output_representation(output_pair))
-            # print('---------------------------------------------------')
             outputs.append(extractor.get_output_representation(output_pair))
-
         if count%100 == 0:
             sys.stdout.write(".")
             sys.stdout.flush()
         count += 1
     sys.stdout.write("\n")
     return np.vstack(inputs),np.vstack(outputs)
-
 
 
 if __name__ == "__main__":
