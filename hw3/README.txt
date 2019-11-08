@@ -28,3 +28,5 @@ UNI: gd2551
      is kindly provided by Prof. Benajiba as self.output_labels.
      The function then creates a list of tuple (action, probability) and return
      the descendingly sorted array based on the probability value.
+
+I don't make changes to the hyperparams

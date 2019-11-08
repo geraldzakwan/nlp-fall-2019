@@ -141,11 +141,6 @@ class FeatureExtractor(object):
                     # Append the index of '<ROOT>'
                     word_indices.append(self.word_vocab['<ROOT>'])
                 else:
-                    # IMPORTANT: If the word is not lowered, words like 'AND', 'WILL'
-                    # and any first word starting with capital letter e.g. 'The'
-                    # will be treated as UNK. This will lower the score to 61-68
-                    word = word.lower()
-
                     # Check special case for words with POS tag: <CD> or <NNP>
                     # In this case, append the index of the POS tag and not the word
                     if pos[word_idx_from_stack] == 'CD':
@@ -155,6 +150,11 @@ class FeatureExtractor(object):
                         # Append the index of 'NNP'
                         word_indices.append(self.word_vocab['<NNP>'])
                     else:
+                        # IMPORTANT: If the word is not lowered, words like 'AND', 'WILL'
+                        # and any first word starting with capital letter e.g. 'The'
+                        # will be treated as UNK.
+                        word = word.lower()
+
                         # This is the normal/typical case where we actually process a word
                         # Check if the word exists in the vocabulary
                         if word in self.word_vocab:
@@ -185,6 +185,8 @@ class FeatureExtractor(object):
                     elif pos[word_idx_from_buffer] == 'NNP':
                         word_indices.append(self.word_vocab['<NNP>'])
                     else:
+                        word = word.lower()
+
                         if word in self.word_vocab:
                             word_idx_from_vocab = self.word_vocab[word]
 
@@ -192,9 +194,13 @@ class FeatureExtractor(object):
                         else:
                             word_indices.append(self.word_vocab['<UNK>'])
 
+        # print(words)
+        # print(pos)
+        # print(state)
+        # print(word_indices)
         # Finally, return the list of word indexes
         # Convert the list into a numpy array with type integer
-        return np.array(word_indices, dtype='int')
+        return np.array(word_indices, dtype='float32')
 
     def get_output_representation(self, output_pair):
         # TODO: Write this method for Part 2
@@ -206,7 +212,7 @@ class FeatureExtractor(object):
 
         # Create a one hot encoding vector as a numpy array with type integer
         # of shape (91). Fill all the elements with zero.
-        one_hot_encoded_transition = np.zeros(len(self.output_labels), dtype='int')
+        one_hot_encoded_transition = np.zeros(len(self.output_labels), dtype='float32')
 
         # Change the value to 1 only for the input transition index
         one_hot_encoded_transition[transition_pair_index] = 1
