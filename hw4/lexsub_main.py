@@ -9,6 +9,8 @@ from nltk.corpus import stopwords
 import gensim
 import numpy as np
 
+from collections import Counter
+
 # Participate in the 4705 lexical substitution competition (optional): YES
 # Alias: peaky_blinders
 
@@ -55,7 +57,45 @@ def smurf_predictor(context):
     return 'smurf'
 
 def wn_frequency_predictor(context):
-    return None # replace for part 2
+    lemma = context.lemma
+    pos = context.pos
+
+    # print(lemma)
+    # print(pos)
+    # print()
+
+    # Return solution as a set to make sure unique lemmas are returned
+    synonyms_counter = Counter()
+
+    # Retrieve all lexemes for the particular lemma and pos
+    lexemes = wn.lemmas(lemma, pos=pos)
+
+    # Iterate over lexemes
+    for lexeme in lexemes:
+        # Get the synset for current lexeme
+        synset = lexeme.synset()
+
+        # Get the lemmas from the synset
+        for candidate_lemma in synset.lemmas():
+            # Retrieve the name from a lemma structure
+            candidate_lemma_name = candidate_lemma.name()
+
+            # Make sure we don't add input lemma as solution
+            if candidate_lemma_name != lemma:
+                # print(candidate_lemma.name())
+                # print(candidate_lemma.count())
+                # print()
+
+                # Check if lemma contains multiple words
+                if len(candidate_lemma_name.split('_')) > 1:
+                    # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+                    candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+
+                # Add to the solution
+                synonyms_counter[candidate_lemma_name] += candidate_lemma.count()
+
+    # Return the set
+    return synonyms_counter.most_common(1)[0][0] # replace for part 2
 
 def wn_simple_lesk_predictor(context):
     return None #replace for part 3
@@ -81,7 +121,10 @@ if __name__=="__main__":
     # print(get_candidates('slow', 'a'))
     # print(len(get_candidates('slow', 'a')))
 
-    # for context in read_lexsub_xml(sys.argv[1]):
-    #     #print(context)  # useful for debugging
-    #     prediction = smurf_predictor(context)
-    #     print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
+    for context in read_lexsub_xml(sys.argv[1]):
+        # print(type(context))
+        # print(context)  # useful for debugging
+        # print(wn_frequency_predictor(context))
+        # prediction = smurf_predictor(context)
+        prediction = wn_frequency_predictor(context)
+        print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
