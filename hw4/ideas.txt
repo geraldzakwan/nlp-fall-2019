@@ -1,9 +1,18 @@
 IDEAS:
 
-- Use regex to convert something like 12 -> CD (like previous task)
-- Remove punctuation
-- Lower words
-- Normalize definition
+- Add candidate space, e.g. synset of synonyms, misal depth 1 -> keknya gabisa soalnya di w2v, intelligent bukan synonym smart
+- Coba pake most similar w2v
+- Normalize definition -> belom, how?
+See https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908\
+1. Lowercase -> DONE
+2. Numbers to words -> TO DO
+Use regex to convert something like 12 -> CD (like previous task)
+3. Punctuation -> DONE
+4. White spaces -> No need
+5. Abbreviations -> How? Kayanya no need
+6. Stop words -> DONE
+7. Sparse words -> Might consider, cmn agak susah karena WordNet count susah diandelin
+8. Canonicalization -> Sulit sepertinya
 
 Important:
 
@@ -34,3 +43,78 @@ Total = 298, attempted = 298
 precision = 0.115, recall = 0.115
 Total with mode 206 attempted 206
 precision = 0.170, recall = 0.170
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_5_left_target.predict gold.trial
+Total = 298, attempted = 298
+precision = 0.121, recall = 0.121
+Total with mode 206 attempted 206
+precision = 0.184, recall = 0.184
+
+# Good insight -> Better to pad right
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_5_right_target.predict gold.trial
+Total = 298, attempted = 298
+precision = 0.124, recall = 0.124
+Total with mode 206 attempted 206
+precision = 0.189, recall = 0.189
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_6_target.predict gold.trial
+Error in w2v_context_sum_6_target.predict on line 1
+Total = 298, attempted = 298
+precision = 0.123, recall = 0.123
+Total with mode 206 attempted 206
+precision = 0.184, recall = 0.184
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_7_left_target.predict gold.trial
+Error in w2v_context_sum_7_left_target.predict on line 1
+Total = 298, attempted = 298
+precision = 0.119, recall = 0.119
+Total with mode 206 attempted 206
+precision = 0.175, recall = 0.175
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_7_right_target.predict gold.trial
+Error in w2v_context_sum_7_right_target.predict on line 1
+Total = 298, attempted = 298
+precision = 0.123, recall = 0.123
+Total with mode 206 attempted 206
+precision = 0.184, recall = 0.184
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_4_target.predict gold.trial
+Error in w2v_context_sum_4_target.predict on line 1
+Total = 298, attempted = 298
+precision = 0.125, recall = 0.125
+Total with mode 206 attempted 206
+precision = 0.194, recall = 0.194
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_3_left_target.predict gold.trial
+Error in w2v_context_sum_3_left_target.predict on line 1
+Total = 298, attempted = 298
+precision = 0.120, recall = 0.120
+Total with mode 206 attempted 206
+precision = 0.175, recall = 0.175
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_3_right_target.predict gold.trial
+Error in w2v_context_sum_3_right_target.predict on line 1
+Total = 298, attempted = 298
+precision = 0.126, recall = 0.126
+Total with mode 206 attempted 206
+precision = 0.189, recall = 0.189
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_2_target.predict gold.trial
+Total = 298, attempted = 298
+precision = 0.127, recall = 0.127
+Total with mode 206 attempted 206
+precision = 0.180, recall = 0.180
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_1_left_target.predict gold.trial
+Error in w2v_context_sum_1_left_target.predict on line 1
+Total = 298, attempted = 298
+precision = 0.127, recall = 0.127
+Total with mode 206 attempted 206
+precision = 0.180, recall = 0.180
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_1_right_target.predict gold.trial
+Error in w2v_context_sum_1_right_target.predict on line 1
+Total = 298, attempted = 298
+precision = 0.127, recall = 0.127
+Total with mode 206 attempted 206
+precision = 0.180, recall = 0.180

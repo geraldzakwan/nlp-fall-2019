@@ -77,6 +77,35 @@ def get_candidates(lemma, pos):
     # Return the set
     return possible_synonyms
 
+def get_more_candidates(lemma, pos, depth=2):
+    # Return solution as a set to make sure unique lemmas are returned
+    possible_synonyms = set([])
+
+    # Retrieve all lexemes for the particular lemma and pos
+    lexemes = wn.lemmas(lemma, pos=pos)
+
+    # Iterate over lexemes
+    for lexeme in lexemes:
+        # Get the synset for current lexeme
+        synset = lexeme.synset()
+
+        # Get the lexemes from the synset
+        for candidate_lemma in synset.lemmas():
+            # Retrieve the name from a lemma structure
+            candidate_lemma_name = candidate_lemma.name()
+
+            # Make sure we don't add input lemma as solution
+            if candidate_lemma_name != lemma:
+                # Check if lemma contains multiple words
+                if len(candidate_lemma_name.split('_')) > 1:
+                    # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+                    candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+
+                # Add lemma to the solution
+                possible_synonyms.add(candidate_lemma_name)
+
+    return possible_synonyms
+
 def smurf_predictor(context):
     """
     Just suggest 'smurf' as a substitute for all words.
@@ -236,7 +265,7 @@ def compute_overlap(cleaned_full_context, sense):
 
     return overlap
 
-def get_cleaned_full_context(context, window_size=-1):
+def get_cleaned_full_context(context, window_size=-1, pad='left'):
     # print(context.word_form)
     left_context = context.left_context
     right_context = context.right_context
@@ -251,11 +280,19 @@ def get_cleaned_full_context(context, window_size=-1):
     right_context = remove_stopwords(right_context)
 
     if window_size > 0:
-        if len(left_context) > window_size:
-            left_context = left_context[len(left_context) - window_size:len(left_context)]
+        left_window_size = window_size // 2
 
-        if len(right_context) > window_size:
-            right_context = right_context[0:window_size]
+        if window_size % 2 == 1:
+            if pad == 'left':
+                left_window_size = left_window_size + 1
+
+        right_window_size = window_size - left_window_size
+
+        if len(left_context) > left_window_size:
+            left_context = left_context[len(left_context) - left_window_size:len(left_context)]
+
+        if len(right_context) > right_window_size:
+            right_context = right_context[0:right_window_size]
 
     # print('LEFT:')
     # print(left_context)
@@ -368,7 +405,7 @@ class Word2VecSubst(object):
     def predict_nearest_with_context(self, context):
         # print(return_frequency(context))
 
-        cleaned_full_context = get_cleaned_full_context(context, 2)
+        cleaned_full_context = get_cleaned_full_context(context, 1, 'left')
         # print(cleaned_full_context)
 
         target_vector = self.model.wv[context.lemma]
@@ -429,7 +466,7 @@ if __name__=="__main__":
     for context in read_lexsub_xml(sys.argv[1]):
         iter = iter + 1
         if iter == 1:
-            print(get_cleaned_full_context(context, 2))
+            print(get_cleaned_full_context(context, 1, 'left'))
         # get_cleaned_full_context(context, 4)
         # print(type(context))
         # print(context)  # useful for debugging
