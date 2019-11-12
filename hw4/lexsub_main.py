@@ -205,14 +205,29 @@ def compute_overlap(cleaned_full_context, sense):
 
     return overlap
 
-def wn_simple_lesk_predictor(context):
+def get_cleaned_full_context(context, window_size=-1):
+    left_context = context.left_context
+    right_context = context.right_context
+
+    if window_size > 0:
+        if len(left_context) > window_size:
+            left_context = left_context[len(left_context) - window_size:len(left_context)]
+
+        if len(right_context) > window_size:
+            right_context = right_context[len(right_context) - window_size:len(right_context)]
+
     # Append left_context and right_context
-    full_context = context.left_context + context.right_context
+    full_context = left_context + right_context
 
     # Some stack of preprocessings
     cleaned_full_context = remove_punctuation(full_context)
     cleaned_full_context = lower(cleaned_full_context)
     cleaned_full_context = remove_stopwords(cleaned_full_context)
+
+    return cleaned_full_context
+
+def wn_simple_lesk_predictor(context):
+    cleaned_full_context = get_cleaned_full_context(context)
 
     # List of tuple: (synset, overlap_count with context)
     synset_overlap_list = []
@@ -266,7 +281,7 @@ class Word2VecSubst(object):
         self.model = gensim.models.KeyedVectors.load_word2vec_format(filename, binary=True)
         # print('Finish loading')
 
-    def predict_nearest(self,context):
+    def predict_nearest(self, context):
         possible_synonyms = list(get_candidates(context.lemma, context.pos))
 
         # Question: What if synonyms OOV???
@@ -278,8 +293,46 @@ class Word2VecSubst(object):
 
         return self.model.most_similar_to_given(context.lemma, considered_synonyms)
 
+    def get_nearest_synonym(self, target_vector, considered_synonyms, metrics='cosine_similarity'):
+        max_cosine_similarity = -1.0
+        nearest_synonym = None
+
+        for i in range(0, len(considered_synonyms)):
+            syn_vector = self.model.wv[considered_synonyms[i]]
+
+            if metrics == 'cosine_similarity':
+                dot_prod = np.dot(target_vector, syn_vector)
+                target_norm = np.linalg.norm(target_vector)
+                syn_norm = np.linalg.norm(syn_vector)
+                cosine_similarity = dot_prod / (target_norm * syn_norm)
+            else:
+                cosine_similarity = -1.0
+
+            if cosine_similarity > max_cosine_similarity:
+                nearest_synonym = considered_synonyms[i]
+                max_cosine_similarity = cosine_similarity
+
+        return nearest_synonym
+
     def predict_nearest_with_context(self, context):
-        return None # replace for part 5
+        cleaned_full_context = get_cleaned_full_context(context, 5)
+
+        target_vector = self.model.wv[context.lemma]
+        for word in cleaned_full_context:
+            # Ignore oov this time
+            if word in self.model.wv:
+                target_vector = np.add(target_vector, self.model.wv[word])
+
+        possible_synonyms = list(get_candidates(context.lemma, context.pos))
+
+        # Question: What if synonyms OOV???
+        # For now, ignore
+        considered_synonyms = []
+        for synonym in possible_synonyms:
+            if synonym in self.model.wv:
+                considered_synonyms.append(synonym)
+
+        return self.get_nearest_synonym(target_vector, considered_synonyms)
 
 if __name__=="__main__":
 
@@ -306,5 +359,6 @@ if __name__=="__main__":
         # prediction = wn_simple_lesk_predictor(context)
         # print(prediction)
         # sys.exit()
-        prediction = predictor.predict_nearest(context)
+        # prediction = predictor.predict_nearest(context)
+        prediction = predictor.predict_nearest_with_context(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
