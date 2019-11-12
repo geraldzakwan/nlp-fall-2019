@@ -4,3 +4,7 @@ IDEAS:
 - Remove punctuation
 - Lower words
 - Normalize definition
+
+Important:
+
+- For lesk, handle synset that doesn't contain lemmas other than input lemma
