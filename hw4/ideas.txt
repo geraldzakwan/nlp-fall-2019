@@ -1,0 +1,6 @@
+IDEAS:
+
+- Use regex to convert something like 12 -> CD (like previous task)
+- Remove punctuation
+- Lower words
+- Normalize definition
