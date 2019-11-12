@@ -83,6 +83,37 @@ def smurf_predictor(context):
     """
     return 'smurf'
 
+def return_frequency(context):
+    # Counter with lemma as key and its count as value
+    synonyms_counter = Counter()
+
+    # Retrieve all lexemes for the particular lemma and pos
+    lexemes = wn.lemmas(context.lemma, pos=context.pos)
+
+    # Iterate over lexemes
+    for lexeme in lexemes:
+        # Get the synset for current lexeme
+        synset = lexeme.synset()
+
+        # Get the lemmas from the synset
+        for candidate_lemma in synset.lemmas():
+            candidate_lemma_name = candidate_lemma.name()
+
+            # Make sure we don't add input lemma as solution
+            if candidate_lemma_name != context.lemma:
+                # Check if lemma contains multiple words
+                if len(candidate_lemma_name.split('_')) > 1:
+                    # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+                    candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+
+                # Add to the solution, the same lemma can be added twice
+                # if it appears together with input lemma in multiple synsets
+                synonyms_counter[candidate_lemma_name] += candidate_lemma.count()
+
+    # If there is a tie, pick an arbitrary lemma, whatever comes first
+    # in the front of the list after sorted descendingly
+    return synonyms_counter
+
 def wn_frequency_predictor(context):
     # Counter with lemma as key and its count as value
     synonyms_counter = Counter()
@@ -214,7 +245,7 @@ def get_cleaned_full_context(context, window_size=-1):
             left_context = left_context[len(left_context) - window_size:len(left_context)]
 
         if len(right_context) > window_size:
-            right_context = right_context[len(right_context) - window_size:len(right_context)]
+            right_context = right_context[0:window_size]
 
     # Append left_context and right_context
     full_context = left_context + right_context
@@ -314,10 +345,16 @@ class Word2VecSubst(object):
 
         return nearest_synonym
 
-    def predict_nearest_with_context(self, context):
-        cleaned_full_context = get_cleaned_full_context(context, 5)
+    def predict_nearest_with_context(self, context, window_size=5, include_target=True):
+        # print(return_frequency(context))
 
-        target_vector = self.model.wv[context.lemma]
+        cleaned_full_context = get_cleaned_full_context(context, window_size)
+
+        if include_target:
+            target_vector = self.model.wv[context.lemma]
+        else:
+            target_vector = np.zeros(300, dtype='float32')
+
         for word in cleaned_full_context:
             # Ignore oov this time
             if word in self.model.wv:
@@ -385,5 +422,8 @@ if __name__=="__main__":
         # sys.exit()
         # prediction = predictor.predict_nearest(context)
         # prediction = predictor.predict_nearest_with_context(context)
-        prediction = predictor.predict_nearest_with_context_average(context)
+        # prediction = predictor.predict_nearest_with_context(context, 1)
+        prediction = predictor.predict_nearest_with_context(context, 1, False)
+        # sys.exit()
+        # prediction = predictor.predict_nearest_with_context_average(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
