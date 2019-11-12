@@ -334,6 +334,30 @@ class Word2VecSubst(object):
 
         return self.get_nearest_synonym(target_vector, considered_synonyms)
 
+    # Don't do nothing
+    # def predict_nearest_with_context_average(self, context):
+    #     cleaned_full_context = get_cleaned_full_context(context, 5)
+    #
+    #     target_vector = self.model.wv[context.lemma]
+    #     for word in cleaned_full_context:
+    #         # Ignore oov this time
+    #         if word in self.model.wv:
+    #             target_vector = np.add(target_vector, self.model.wv[word])
+    #
+    #     # Take the average
+    #     target_vector = np.divide(target_vector, len(cleaned_full_context) + 1)
+    #
+    #     possible_synonyms = list(get_candidates(context.lemma, context.pos))
+    #
+    #     # Question: What if synonyms OOV???
+    #     # For now, ignore
+    #     considered_synonyms = []
+    #     for synonym in possible_synonyms:
+    #         if synonym in self.model.wv:
+    #             considered_synonyms.append(synonym)
+    #
+    #     return self.get_nearest_synonym(target_vector, considered_synonyms)
+
 if __name__=="__main__":
 
     # At submission time, this program should run your best predictor (part 6).
@@ -360,5 +384,6 @@ if __name__=="__main__":
         # print(prediction)
         # sys.exit()
         # prediction = predictor.predict_nearest(context)
-        prediction = predictor.predict_nearest_with_context(context)
+        # prediction = predictor.predict_nearest_with_context(context)
+        prediction = predictor.predict_nearest_with_context_average(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))

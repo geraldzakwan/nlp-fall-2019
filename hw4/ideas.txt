@@ -38,4 +38,11 @@ Total = 298, attempted = 298
 precision = 0.115, recall = 0.115
 Total with mode 206 attempted 206
 precision = 0.170, recall = 0.170
-(venv) Kartikos-MBP:hw4 kartiko$ 
+(venv) Kartikos-MBP:hw4 kartiko$
+
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context.predict gold.trial
+Total = 298, attempted = 298
+precision = 0.119, recall = 0.119
+Total with mode 206 attempted 206
+precision = 0.170, recall = 0.170
