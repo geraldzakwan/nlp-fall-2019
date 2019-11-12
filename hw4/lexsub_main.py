@@ -237,8 +237,18 @@ def compute_overlap(cleaned_full_context, sense):
     return overlap
 
 def get_cleaned_full_context(context, window_size=-1):
+    # print(context.word_form)
     left_context = context.left_context
     right_context = context.right_context
+
+    # Some stack of preprocessings
+    left_context = remove_punctuation(left_context)
+    left_context = lower(left_context)
+    left_context = remove_stopwords(left_context)
+
+    right_context = remove_punctuation(right_context)
+    right_context = lower(right_context)
+    right_context = remove_stopwords(right_context)
 
     if window_size > 0:
         if len(left_context) > window_size:
@@ -247,15 +257,21 @@ def get_cleaned_full_context(context, window_size=-1):
         if len(right_context) > window_size:
             right_context = right_context[0:window_size]
 
+    # print('LEFT:')
+    # print(left_context)
+    # print('RIGHT:')
+    # print(right_context)
     # Append left_context and right_context
     full_context = left_context + right_context
+    # print('FULL:')
+    # print(full_context)
 
-    # Some stack of preprocessings
-    cleaned_full_context = remove_punctuation(full_context)
-    cleaned_full_context = lower(cleaned_full_context)
-    cleaned_full_context = remove_stopwords(cleaned_full_context)
+    # # Some stack of preprocessings
+    # full_context = remove_punctuation(full_context)
+    # full_context = lower(full_context)
+    # full_context = remove_stopwords(full_context)
 
-    return cleaned_full_context
+    return full_context
 
 def wn_simple_lesk_predictor(context):
     cleaned_full_context = get_cleaned_full_context(context)
@@ -339,21 +355,23 @@ class Word2VecSubst(object):
             else:
                 cosine_similarity = -1.0
 
+            # print(considered_synonyms[i] + ', ' + str(cosine_similarity))
+
             if cosine_similarity > max_cosine_similarity:
                 nearest_synonym = considered_synonyms[i]
                 max_cosine_similarity = cosine_similarity
 
+        # print('--------------------')
+
         return nearest_synonym
 
-    def predict_nearest_with_context(self, context, window_size=5, include_target=True):
+    def predict_nearest_with_context(self, context):
         # print(return_frequency(context))
 
-        cleaned_full_context = get_cleaned_full_context(context, window_size)
+        cleaned_full_context = get_cleaned_full_context(context, 2)
+        # print(cleaned_full_context)
 
-        if include_target:
-            target_vector = self.model.wv[context.lemma]
-        else:
-            target_vector = np.zeros(300, dtype='float32')
+        target_vector = self.model.wv[context.lemma]
 
         for word in cleaned_full_context:
             # Ignore oov this time
@@ -396,7 +414,6 @@ class Word2VecSubst(object):
     #     return self.get_nearest_synonym(target_vector, considered_synonyms)
 
 if __name__=="__main__":
-
     # At submission time, this program should run your best predictor (part 6).
 
     W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
@@ -408,7 +425,12 @@ if __name__=="__main__":
     # print(remove_stopwords(['i', 'love', 'you']))
     # sys.exit()
 
+    iter = 0
     for context in read_lexsub_xml(sys.argv[1]):
+        iter = iter + 1
+        if iter == 1:
+            print(get_cleaned_full_context(context, 2))
+        # get_cleaned_full_context(context, 4)
         # print(type(context))
         # print(context)  # useful for debugging
         # print(context.pos)
@@ -421,8 +443,8 @@ if __name__=="__main__":
         # print(prediction)
         # sys.exit()
         # prediction = predictor.predict_nearest(context)
+        prediction = predictor.predict_nearest_with_context(context)
         # prediction = predictor.predict_nearest_with_context(context, 5, False)
-        prediction = predictor.predict_nearest_with_context(context, 7)
         # prediction = predictor.predict_nearest_with_context(context, 1, False)
         # sys.exit()
         # prediction = predictor.predict_nearest_with_context_average(context)

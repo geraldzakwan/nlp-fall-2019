@@ -12,92 +12,24 @@ Important:
 
 Result:
 
+(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > frequency.predict
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl frequency.predict gold.trial
+Total = 298, attempted = 298
+precision = 0.098, recall = 0.098
+Total with mode 206 attempted 206
+precision = 0.136, recall = 0.136
+
+(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > simple_lesk.predict
 (venv) Kartikos-MBP:hw4 kartiko$ perl score.pl simple_lesk.predict gold.trial
 Total = 298, attempted = 298
 precision = 0.088, recall = 0.088
 Total with mode 206 attempted 206
 precision = 0.131, recall = 0.131
 
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl frequent.predict gold.trial
-Illegal division by zero at score.pl line 109.
-
-(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > frequent.predict
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl frequent.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.098, recall = 0.098
-Total with mode 206 attempted 206
-precision = 0.136, recall = 0.136
-
-(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > w2v.predict
+(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > most_similar.predict
 /Users/kartiko/iCloud Drive (Archive)/Desktop/workspace/venv/lib/python3.5/site-packages/gensim/matutils.py:737: FutureWarning: Conversion of the second argument of issubdtype from `int` to `np.signedinteger` is deprecated. In future, it will be treated as `np.int64 == np.dtype(int).type`.
   if np.issubdtype(vec.dtype, np.int):
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v.predict gold.trial
-Error in w2v.predict on line 1
-Error in w2v.predict on line 2
-Error in w2v.predict on line 103
-Error in w2v.predict on line 204
-Total = 298, attempted = 298
-precision = 0.115, recall = 0.115
-Total with mode 206 attempted 206
-precision = 0.170, recall = 0.170
-(venv) Kartikos-MBP:hw4 kartiko$
-
-
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.119, recall = 0.119
-Total with mode 206 attempted 206
-precision = 0.170, recall = 0.170
-
-
-(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > w2v_context_sum_w5_no_target.predict
-lexsub_main.py:338: RuntimeWarning: invalid value encountered in float_scalars
-  cosine_similarity = dot_prod / (target_norm * syn_norm)
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_w5_no_target.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.088, recall = 0.088
-Total with mode 206 attempted 206
-precision = 0.112, recall = 0.112
-
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_w1_target.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.123, recall = 0.123
-Total with mode 206 attempted 206
-precision = 0.170, recall = 0.170
-
-(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > w2v_context_sum_w2_target.predict
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_w2_target.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.123, recall = 0.123
-Total with mode 206 attempted 206
-precision = 0.175, recall = 0.175
-
-(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > w2v_context_sum_w3_target.predict
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_w3_target.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.125, recall = 0.125
-Total with mode 206 attempted 206
-precision = 0.180, recall = 0.180
-
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_w4_target.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.129, recall = 0.129
-Total with mode 206 attempted 206
-precision = 0.189, recall = 0.189
-
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_w5_target.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.127, recall = 0.127
-Total with mode 206 attempted 206
-precision = 0.184, recall = 0.184
-
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_w6_target.predict gold.trial
-Total = 298, attempted = 298
-precision = 0.121, recall = 0.121
-Total with mode 206 attempted 206
-precision = 0.180, recall = 0.180
-
-(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v_context_sum_w7_target.predict gold.trial
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl most_similar.predict gold.trial
 Total = 298, attempted = 298
 precision = 0.115, recall = 0.115
 Total with mode 206 attempted 206
