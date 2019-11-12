@@ -264,9 +264,19 @@ class Word2VecSubst(object):
 
     def __init__(self, filename):
         self.model = gensim.models.KeyedVectors.load_word2vec_format(filename, binary=True)
+        # print('Finish loading')
 
     def predict_nearest(self,context):
-        return None # replace for part 4
+        possible_synonyms = list(get_candidates(context.lemma, context.pos))
+
+        # Question: What if synonyms OOV???
+        # For now, ignore
+        considered_synonyms = []
+        for synonym in possible_synonyms:
+            if synonym in self.model.wv:
+                considered_synonyms.append(synonym)
+
+        return self.model.most_similar_to_given(context.lemma, considered_synonyms)
 
     def predict_nearest_with_context(self, context):
         return None # replace for part 5
@@ -275,8 +285,8 @@ if __name__=="__main__":
 
     # At submission time, this program should run your best predictor (part 6).
 
-    #W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
-    #predictor = Word2VecSubst(W2VMODEL_FILENAME)
+    W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
+    predictor = Word2VecSubst(W2VMODEL_FILENAME)
 
     # print(get_candidates('slow', 'a'))
     # print(len(get_candidates('slow', 'a')))
@@ -292,8 +302,9 @@ if __name__=="__main__":
         # get_candidates('slow', 'a')
         # print(wn_frequency_predictor(context))
         # prediction = smurf_predictor(context)
-        prediction = wn_frequency_predictor(context)
+        # prediction = wn_frequency_predictor(context)
         # prediction = wn_simple_lesk_predictor(context)
         # print(prediction)
         # sys.exit()
+        prediction = predictor.predict_nearest(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))

@@ -8,3 +8,34 @@ IDEAS:
 Important:
 
 - For lesk, handle synset that doesn't contain lemmas other than input lemma
+
+
+Result:
+
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl simple_lesk.predict gold.trial
+Total = 298, attempted = 298
+precision = 0.088, recall = 0.088
+Total with mode 206 attempted 206
+precision = 0.131, recall = 0.131
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl frequent.predict gold.trial
+Illegal division by zero at score.pl line 109.
+(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > frequent.predict
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl frequent.predict gold.trial
+Total = 298, attempted = 298
+precision = 0.098, recall = 0.098
+Total with mode 206 attempted 206
+precision = 0.136, recall = 0.136
+
+(venv) Kartikos-MBP:hw4 kartiko$ python3 lexsub_main.py lexsub_trial.xml > w2v.predict
+/Users/kartiko/iCloud Drive (Archive)/Desktop/workspace/venv/lib/python3.5/site-packages/gensim/matutils.py:737: FutureWarning: Conversion of the second argument of issubdtype from `int` to `np.signedinteger` is deprecated. In future, it will be treated as `np.int64 == np.dtype(int).type`.
+  if np.issubdtype(vec.dtype, np.int):
+(venv) Kartikos-MBP:hw4 kartiko$ perl score.pl w2v.predict gold.trial
+Error in w2v.predict on line 1
+Error in w2v.predict on line 2
+Error in w2v.predict on line 103
+Error in w2v.predict on line 204
+Total = 298, attempted = 298
+precision = 0.115, recall = 0.115
+Total with mode 206 attempted 206
+precision = 0.170, recall = 0.170
+(venv) Kartikos-MBP:hw4 kartiko$ 
