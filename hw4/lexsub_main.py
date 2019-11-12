@@ -96,11 +96,6 @@ def wn_frequency_predictor(context):
     lemma = context.lemma
     pos = context.pos
 
-    # print(lemma)
-    # print(pos)
-    # print()
-
-    # Return solution as a set to make sure unique lemmas are returned
     synonyms_counter = Counter()
 
     # Retrieve all lexemes for the particular lemma and pos
@@ -118,10 +113,6 @@ def wn_frequency_predictor(context):
 
             # Make sure we don't add input lemma as solution
             if candidate_lemma_name != lemma:
-                # print(candidate_lemma.name())
-                # print(candidate_lemma.count())
-                # print()
-
                 # Check if lemma contains multiple words
                 if len(candidate_lemma_name.split('_')) > 1:
                     # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
@@ -130,12 +121,11 @@ def wn_frequency_predictor(context):
                 # Add to the solution
                 synonyms_counter[candidate_lemma_name] += candidate_lemma.count()
 
-    # Return the set
-    return synonyms_counter.most_common(1)[0][0] # replace for part 2
+    return synonyms_counter.most_common(1)[0][0]
 
 def get_most_frequent_lexeme(synset, input_lemma):
     max_lexeme = None
-    max_count = -1
+    max_count = 0
 
     # Get the lemmas from the synset
     for lexeme in synset.lemmas():
@@ -147,11 +137,26 @@ def get_most_frequent_lexeme(synset, input_lemma):
                 max_count = lexeme.count()
 
     # Rare case when all counts equal to zero
-    if max_count == -1:
+    if max_lexeme == None:
         # Just return the first one
         return synset.lemmas()[0]
 
     return max_lexeme
+
+def get_most_frequent_synset(synset_overlap_list):
+    max_count = 0
+    most_frequent_synset = None
+
+    for tup in synset_overlap_list:
+        synset = tup[0]
+        lexeme = tup[1]
+        count = lexeme.count()
+
+        if count > max_count:
+            most_frequent_synset = synset
+            max_count = count
+
+    return most_frequent_synset
 
 def compute_overlap(cleaned_full_context, sense):
     overlap = 0
@@ -185,7 +190,7 @@ def wn_simple_lesk_predictor(context):
     lemma = context.lemma
     pos = context.pos
 
-    print(lemma)
+    # print(lemma)
 
     full_context = context.left_context + context.right_context
 
@@ -197,8 +202,8 @@ def wn_simple_lesk_predictor(context):
     # Retrieve all lexemes for the particular lemma and pos
     lexemes = wn.lemmas(lemma, pos=pos)
 
-    best_sense = None
-    max_overlap = -1
+    synset_overlap_list = []
+
     # Iterate over lexemes
     for lexeme in lexemes:
         # Get the synset for current lexeme
@@ -206,11 +211,17 @@ def wn_simple_lesk_predictor(context):
 
         overlap = compute_overlap(cleaned_full_context, synset)
 
-        if overlap > max_overlap:
-            best_sense = synset
-            max_overlap = overlap
+        synset_overlap_list.append((synset, lexeme, overlap))
 
-    most_frequent_lexeme = get_most_frequent_lexeme(best_sense, lemma)
+    synset_overlap_list = sorted(synset_overlap_list, key=lambda x: x[2], reverse=True)
+    print(synset_overlap_list)
+
+    best_sense = synset_overlap_list[0]
+
+    # if best_sense[2] == 0:
+    #     best_sense = get_most_frequent_synset(synset_overlap_list)
+
+    most_frequent_lexeme = get_most_frequent_lexeme(best_sense[0], lemma)
     lemma_name = most_frequent_lexeme.name()
 
     # Check if lemma contains multiple words
@@ -254,6 +265,6 @@ if __name__=="__main__":
         # prediction = smurf_predictor(context)
         prediction = wn_frequency_predictor(context)
         # prediction = wn_simple_lesk_predictor(context)
-        # print(prediction)
-        # sys.exit()
+        print(prediction)
+        sys.exit()
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
