@@ -165,6 +165,8 @@ def get_most_frequent_synset(synset_overlap_list, input_lemma):
 
     return most_frequent_synset
 
+# Assumption: We don't count duplicate overlap
+# So we can use set to quickly compute it (using intersection)
 def compute_overlap(cleaned_full_context, sense):
     overlap = 0
     cleaned_full_context_set = set(cleaned_full_context)
@@ -173,38 +175,46 @@ def compute_overlap(cleaned_full_context, sense):
     definition = tokenize(raw_definition)
     examples = sense.examples()
 
-    cleaned_definition = remove_stopwords(definition)
-    cleaned_examples = remove_stopwords(examples)
+    cleaned_definition = normalize(definition)
+    cleaned_examples = normalize(examples)
+    # cleaned_definition = remove_stopwords(definition)
+    # cleaned_examples = remove_stopwords(examples)
 
     overlap += len(cleaned_full_context_set.intersection(set(cleaned_definition)))
     overlap += len(cleaned_full_context_set.intersection(set(cleaned_examples)))
 
+    # Add also the hypernym
     hypernyms = sense.hypernyms()
     for hypernym in hypernyms:
         raw_definition = hypernym.definition()
         definition = tokenize(raw_definition)
         examples = hypernym.examples()
 
-        cleaned_definition = remove_stopwords(definition)
-        cleaned_examples = remove_stopwords(examples)
+        cleaned_definition = normalize(definition)
+        cleaned_examples = normalize(examples)
+        # cleaned_definition = remove_stopwords(definition)
+        # cleaned_examples = remove_stopwords(examples)
 
         overlap += len(cleaned_full_context_set.intersection(set(cleaned_definition)))
         overlap += len(cleaned_full_context_set.intersection(set(cleaned_examples)))
 
     return overlap
 
+def normalize(sentence):
+    # Some stack of preprocessings to normalize a list of tokens
+    sentence = remove_punctuation(sentence)
+    sentence = lower(sentence)
+    sentence = remove_stopwords(sentence)
+
+    return sentence
+
 def get_cleaned_full_context(context, window_size=-1, pad='left'):
     left_context = context.left_context
     right_context = context.right_context
 
-    # Some stack of preprocessings/normalizations
-    left_context = remove_punctuation(left_context)
-    left_context = lower(left_context)
-    left_context = remove_stopwords(left_context)
-
-    right_context = remove_punctuation(right_context)
-    right_context = lower(right_context)
-    right_context = remove_stopwords(right_context)
+    # Normalize them
+    left_context = normalize(left_context)
+    right_context = normalize(right_context)
 
     if window_size > 0:
         left_window_size = window_size // 2
