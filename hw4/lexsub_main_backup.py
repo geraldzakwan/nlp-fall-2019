@@ -77,11 +77,71 @@ def get_candidates(lemma, pos):
     # Return the set
     return possible_synonyms
 
+def get_more_candidates(lemma, pos, depth=2):
+    # Return solution as a set to make sure unique lemmas are returned
+    possible_synonyms = set([])
+
+    # Retrieve all lexemes for the particular lemma and pos
+    lexemes = wn.lemmas(lemma, pos=pos)
+
+    # Iterate over lexemes
+    for lexeme in lexemes:
+        # Get the synset for current lexeme
+        synset = lexeme.synset()
+
+        # Get the lexemes from the synset
+        for candidate_lemma in synset.lemmas():
+            # Retrieve the name from a lemma structure
+            candidate_lemma_name = candidate_lemma.name()
+
+            # Make sure we don't add input lemma as solution
+            if candidate_lemma_name != lemma:
+                # Check if lemma contains multiple words
+                if len(candidate_lemma_name.split('_')) > 1:
+                    # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+                    candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+
+                # Add lemma to the solution
+                possible_synonyms.add(candidate_lemma_name)
+
+    return possible_synonyms
+
 def smurf_predictor(context):
     """
     Just suggest 'smurf' as a substitute for all words.
     """
     return 'smurf'
+
+def return_frequency(context):
+    # Counter with lemma as key and its count as value
+    synonyms_counter = Counter()
+
+    # Retrieve all lexemes for the particular lemma and pos
+    lexemes = wn.lemmas(context.lemma, pos=context.pos)
+
+    # Iterate over lexemes
+    for lexeme in lexemes:
+        # Get the synset for current lexeme
+        synset = lexeme.synset()
+
+        # Get the lemmas from the synset
+        for candidate_lemma in synset.lemmas():
+            candidate_lemma_name = candidate_lemma.name()
+
+            # Make sure we don't add input lemma as solution
+            if candidate_lemma_name != context.lemma:
+                # Check if lemma contains multiple words
+                if len(candidate_lemma_name.split('_')) > 1:
+                    # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+                    candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+
+                # Add to the solution, the same lemma can be added twice
+                # if it appears together with input lemma in multiple synsets
+                synonyms_counter[candidate_lemma_name] += candidate_lemma.count()
+
+    # If there is a tie, pick an arbitrary lemma, whatever comes first
+    # in the front of the list after sorted descendingly
+    return synonyms_counter
 
 def wn_frequency_predictor(context):
     # Counter with lemma as key and its count as value
@@ -120,26 +180,26 @@ def get_most_frequent_lexeme(synset, input_lemma):
 
     # Get the lemmas from the synset
     for lexeme in synset.lemmas():
+        # print('EUY')
+        # print(synset.lemmas())
+        # print(lexeme)
+        # print(lexeme.count())
         # Make sure we don't add input lemma as solution
         if lexeme.name() != input_lemma:
             if lexeme.count() > max_count:
                 max_lexeme = lexeme
                 max_count = lexeme.count()
 
-    # Case when all counts equal to zero (not sure why WordNet
-    # would have count zero )
+    # Rare case when all counts equal to zero
     if max_count == 0:
+        # raise Exception('Wew')
         # Just return the first one
         return synset.lemmas()[0]
 
     return max_lexeme
 
 def get_most_frequent_synset(synset_overlap_list, input_lemma):
-    # Set initial max_count = -1 to make sure that most_frequent_synset
-    # will not be None if all lexeme counts are zero
-    # In that case, the first lexeme (that is not the same with input_lemma)
-    # will be returned as the substitute
-    max_count = -1
+    max_count = 0
     most_frequent_synset = None
 
     for tup in synset_overlap_list:
@@ -150,6 +210,8 @@ def get_most_frequent_synset(synset_overlap_list, input_lemma):
         proceed = True
         if len(lexemes) == 1:
             if lexemes[0].name() == input_lemma:
+                # print('PERNAH')
+                # print(lexemes)
                 proceed = False
 
         if proceed:
@@ -191,13 +253,24 @@ def compute_overlap(cleaned_full_context, sense):
         overlap += len(cleaned_full_context_set.intersection(set(cleaned_definition)))
         overlap += len(cleaned_full_context_set.intersection(set(cleaned_examples)))
 
+    if overlap > 0:
+        # print('YEY, OVERLAP')
+        # print(overlap)
+        # print('CONTEXT')
+        # print(cleaned_full_context)
+        # print('SENSE')
+        # print(sense)
+        # print('------------------')
+        pass
+
     return overlap
 
 def get_cleaned_full_context(context, window_size=-1, pad='left'):
+    # print(context.word_form)
     left_context = context.left_context
     right_context = context.right_context
 
-    # Some stack of preprocessings/normalizations
+    # Some stack of preprocessings
     left_context = remove_punctuation(left_context)
     left_context = lower(left_context)
     left_context = remove_stopwords(left_context)
@@ -221,37 +294,21 @@ def get_cleaned_full_context(context, window_size=-1, pad='left'):
         if len(right_context) > right_window_size:
             right_context = right_context[0:right_window_size]
 
+    # print('LEFT:')
+    # print(left_context)
+    # print('RIGHT:')
+    # print(right_context)
     # Append left_context and right_context
     full_context = left_context + right_context
+    # print('FULL:')
+    # print(full_context)
+
+    # # Some stack of preprocessings
+    # full_context = remove_punctuation(full_context)
+    # full_context = lower(full_context)
+    # full_context = remove_stopwords(full_context)
 
     return full_context
-
-def resolve_best_synset(synset_overlap_list):
-    # Sort based on overlap_count, descendingly
-    synset_overlap_list = sorted(synset_overlap_list, key=lambda x: x[1], reverse=True)
-    max_overlap = synset_overlap_list[0][1]
-
-    # If no overlap, return the most frequent synset
-    if max_overlap == 0:
-        return get_most_frequent_synset(synset_overlap_list, context.lemma)
-
-    # Get all synsets with max overlap
-    synset_with_max_overlap = []
-    for tup in synset_overlap_list:
-        overlap = tup[1]
-
-        if overlap < max_overlap:
-            break
-
-        synset_with_max_overlap.append(tup)
-
-    # Only 1 synset with max overlap, return it
-    if len(synset_with_max_overlap) == 1:
-        return synset_with_max_overlap[0][0]
-
-    # Resolve using get_most_frequent_synset,
-    # this time using only synset with max overlap
-    return get_most_frequent_synset(synset_with_max_overlap, context.lemma)
 
 def wn_simple_lesk_predictor(context):
     cleaned_full_context = get_cleaned_full_context(context)
@@ -266,6 +323,8 @@ def wn_simple_lesk_predictor(context):
         proceed = True
         if len(lexemes) == 1:
             if lexemes[0].name() == context.lemma:
+                # print('PERNAH')
+                # print(lexemes)
                 proceed = False
 
         if proceed:
@@ -273,23 +332,38 @@ def wn_simple_lesk_predictor(context):
 
             synset_overlap_list.append((synset, overlap))
 
-    best_synset = resolve_best_synset(synset_overlap_list)
+    # Sort based on overlap_count
+    synset_overlap_list = sorted(synset_overlap_list, key=lambda x: x[1], reverse=True)
+    # print('1')
+    # print(synset_overlap_list)
 
-    # Get the most frequent lexeme
+    best_tup = synset_overlap_list[0]
+    best_synset = best_tup[0]
+    best_overlap = best_tup[1]
+    # print('2')
+    # print(best_sense)
+    if best_overlap == 0:
+        best_sense = get_most_frequent_synset(synset_overlap_list, context.lemma)
+        # print('3')
+        # print(best_sense)
+
     most_frequent_lexeme = get_most_frequent_lexeme(best_synset, context.lemma)
+    # print('4')
+    # print(most_frequent_lexeme)
     lemma_name = most_frequent_lexeme.name()
 
-    # Check if lemma name contains multiple words
+    # Check if lemma contains multiple words
     if len(lemma_name.split('_')) > 1:
         # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
         lemma_name = lemma_name.replace('_', ' ')
 
-    return lemma_name
+    return lemma_name #replace for part 3
 
 class Word2VecSubst(object):
 
     def __init__(self, filename):
         self.model = gensim.models.KeyedVectors.load_word2vec_format(filename, binary=True)
+        # print('Finish loading')
 
     def predict_nearest(self, context):
         possible_synonyms = list(get_candidates(context.lemma, context.pos))
@@ -318,14 +392,21 @@ class Word2VecSubst(object):
             else:
                 cosine_similarity = -1.0
 
+            # print(considered_synonyms[i] + ', ' + str(cosine_similarity))
+
             if cosine_similarity > max_cosine_similarity:
                 nearest_synonym = considered_synonyms[i]
                 max_cosine_similarity = cosine_similarity
 
+        # print('--------------------')
+
         return nearest_synonym
 
     def predict_nearest_with_context(self, context):
+        # print(return_frequency(context))
+
         cleaned_full_context = get_cleaned_full_context(context, 1, 'left')
+        # print(cleaned_full_context)
 
         target_vector = self.model.wv[context.lemma]
 
@@ -372,8 +453,8 @@ class Word2VecSubst(object):
 if __name__=="__main__":
     # At submission time, this program should run your best predictor (part 6).
 
-    # W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
-    # predictor = Word2VecSubst(W2VMODEL_FILENAME)
+    W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
+    predictor = Word2VecSubst(W2VMODEL_FILENAME)
 
     # print(get_candidates('slow', 'a'))
     # print(len(get_candidates('slow', 'a')))
@@ -383,9 +464,9 @@ if __name__=="__main__":
 
     iter = 0
     for context in read_lexsub_xml(sys.argv[1]):
-        # iter = iter + 1
-        # if iter == 1:
-        #     print(get_cleaned_full_context(context, 1, 'left'))
+        iter = iter + 1
+        if iter == 1:
+            print(get_cleaned_full_context(context, 1, 'left'))
         # get_cleaned_full_context(context, 4)
         # print(type(context))
         # print(context)  # useful for debugging
@@ -395,11 +476,11 @@ if __name__=="__main__":
         # print(wn_frequency_predictor(context))
         # prediction = smurf_predictor(context)
         # prediction = wn_frequency_predictor(context)
-        prediction = wn_simple_lesk_predictor(context)
+        # prediction = wn_simple_lesk_predictor(context)
         # print(prediction)
         # sys.exit()
         # prediction = predictor.predict_nearest(context)
-        # prediction = predictor.predict_nearest_with_context(context)
+        prediction = predictor.predict_nearest_with_context(context)
         # prediction = predictor.predict_nearest_with_context(context, 5, False)
         # prediction = predictor.predict_nearest_with_context(context, 1, False)
         # sys.exit()

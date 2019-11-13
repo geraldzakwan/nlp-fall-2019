@@ -20,34 +20,34 @@ film.n 19 :: movie
 film.n 20 :: cinema
 take.v 21 :: aim
 take.v 22 :: bring
-take.v 23 :: occupy
+take.v 23 :: require
 take.v 24 :: occupy
 take.v 25 :: consider
-take.v 26 :: occupy
+take.v 26 :: require
 take.v 27 :: drive
-take.v 28 :: occupy
+take.v 28 :: require
 take.v 29 :: aim
 take.v 30 :: subscribe to
-tight.r 31 :: fast
-tight.r 32 :: fast
-tight.r 33 :: fast
-tight.r 34 :: fast
-tight.r 35 :: fast
-tight.r 36 :: fast
-tight.r 37 :: fast
-tight.r 38 :: fast
-tight.r 39 :: fast
-tight.r 40 :: fast
-bar.n 41 :: saloon
-bar.n 42 :: saloon
-bar.n 43 :: saloon
+tight.r 31 :: close
+tight.r 32 :: close
+tight.r 33 :: close
+tight.r 34 :: close
+tight.r 35 :: close
+tight.r 36 :: close
+tight.r 37 :: close
+tight.r 38 :: close
+tight.r 39 :: close
+tight.r 40 :: close
+bar.n 41 :: prevention
+bar.n 42 :: prevention
+bar.n 43 :: prevention
 bar.n 44 :: legal profession
-bar.n 45 :: saloon
-bar.n 46 :: saloon
+bar.n 45 :: prevention
+bar.n 46 :: prevention
 bar.n 47 :: cake
 bar.n 48 :: saloon
 bar.n 49 :: cake
-bar.v 50 :: exclude
+bar.v 50 :: block
 cross.n 51 :: crisscross
 cross.n 52 :: crisscross
 cross.n 53 :: crisscross
@@ -58,46 +58,46 @@ cross.n 57 :: Cross
 cross.n 58 :: crisscross
 cross.n 59 :: crisscross
 cross.a 60 :: transverse
-finally.r 61 :: eventually
-finally.r 62 :: eventually
-finally.r 63 :: eventually
-finally.r 64 :: eventually
-finally.r 65 :: eventually
-finally.r 66 :: eventually
+finally.r 61 :: at last
+finally.r 62 :: at last
+finally.r 63 :: at last
+finally.r 64 :: at last
+finally.r 65 :: at last
+finally.r 66 :: at last
 finally.r 67 :: at last
-finally.r 68 :: eventually
-finally.r 69 :: eventually
-finally.r 70 :: eventually
-find.v 71 :: encounter
+finally.r 68 :: at last
+finally.r 69 :: at last
+finally.r 70 :: at last
+find.v 71 :: observe
 find.v 72 :: find
-find.v 73 :: encounter
-find.v 74 :: encounter
-find.v 75 :: encounter
-find.v 76 :: encounter
-find.v 77 :: encounter
-find.v 78 :: encounter
-find.v 79 :: encounter
-find.v 80 :: encounter
-fix.v 81 :: repair
-fix.v 82 :: repair
+find.v 73 :: observe
+find.v 74 :: observe
+find.v 75 :: observe
+find.v 76 :: observe
+find.v 77 :: observe
+find.v 78 :: observe
+find.v 79 :: observe
+find.v 80 :: observe
+fix.v 81 :: prepare
+fix.v 82 :: prepare
 fix.v 83 :: get
-fix.v 84 :: repair
+fix.v 84 :: prepare
 fix.v 85 :: repair
-fix.v 86 :: repair
-fix.v 87 :: repair
-fix.v 88 :: repair
+fix.v 86 :: prepare
+fix.v 87 :: prepare
+fix.v 88 :: prepare
 fix.v 89 :: prepare
 fix.v 90 :: get
-manage.v 91 :: pull off
-manage.v 92 :: pull off
-manage.v 93 :: pull off
-manage.v 94 :: pull off
-manage.v 95 :: pull off
-manage.v 96 :: pull off
-manage.v 97 :: pull off
-manage.v 98 :: pull off
-manage.v 99 :: pull off
-manage.v 100 :: pull off
+manage.v 91 :: handle
+manage.v 92 :: handle
+manage.v 93 :: handle
+manage.v 94 :: handle
+manage.v 95 :: handle
+manage.v 96 :: handle
+manage.v 97 :: handle
+manage.v 98 :: handle
+manage.v 99 :: handle
+manage.v 100 :: handle
 neat.a 101 :: neat
 neat.a 102 :: neat
 neat.a 103 :: neat
@@ -108,16 +108,16 @@ neat.a 107 :: neat
 neat.a 108 :: neat
 neat.a 109 :: neat
 neat.a 110 :: neat
-rich.a 111 :: fat
-rich.a 112 :: fat
-rich.a 113 :: fat
-rich.a 114 :: fat
-rich.a 115 :: fat
-rich.a 116 :: fat
-rich.a 117 :: fat
-rich.a 118 :: fat
-rich.a 119 :: fat
-rich.a 120 :: fat
+rich.a 111 :: deep
+rich.a 112 :: deep
+rich.a 113 :: deep
+rich.a 114 :: deep
+rich.a 115 :: deep
+rich.a 116 :: deep
+rich.a 117 :: deep
+rich.a 118 :: deep
+rich.a 119 :: deep
+rich.a 120 :: deep
 severely.r 121 :: badly
 severely.r 122 :: hard
 severely.r 123 :: badly
@@ -130,14 +130,14 @@ severely.r 129 :: badly
 severely.r 130 :: badly
 stand.v 131 :: bear
 stand.v 132 :: stand up
-stand.v 133 :: remain firm
+stand.v 133 :: bear
 stand.v 134 :: stand up
 stand.v 135 :: stand up
 stand.v 136 :: stand up
-stand.n 137 :: base
-stand.n 138 :: base
-stand.n 139 :: base
-stand.n 140 :: base
+stand.n 137 :: viewpoint
+stand.n 138 :: viewpoint
+stand.n 139 :: viewpoint
+stand.n 140 :: viewpoint
 well.r 141 :: good
 well.r 142 :: good
 well.r 143 :: good
@@ -158,26 +158,26 @@ wild.a 157 :: wild
 wild.a 158 :: wild
 wild.a 159 :: wild
 wild.n 160 :: wild
-can.n 161 :: can
-can.n 162 :: can
-can.n 163 :: can
+can.n 161 :: seat
+can.n 162 :: seat
+can.n 163 :: seat
 can.n 164 :: can
 can.n 165 :: can
-can.n 166 :: can
-can.n 167 :: can
-can.n 168 :: can
-can.n 169 :: can
-can.n 170 :: can
-dark.n 171 :: darkness
-dark.n 172 :: darkness
-dark.n 173 :: darkness
-dark.n 174 :: darkness
-dark.n 175 :: darkness
-dark.n 176 :: darkness
-dark.n 177 :: darkness
-dark.n 178 :: darkness
-dark.n 179 :: darkness
-dark.n 180 :: darkness
+can.n 166 :: seat
+can.n 167 :: seat
+can.n 168 :: seat
+can.n 169 :: seat
+can.n 170 :: toilet
+dark.n 171 :: night
+dark.n 172 :: night
+dark.n 173 :: night
+dark.n 174 :: night
+dark.n 175 :: night
+dark.n 176 :: night
+dark.n 177 :: night
+dark.n 178 :: night
+dark.n 179 :: night
+dark.n 180 :: night
 examination.n 181 :: examen
 examination.n 182 :: scrutiny
 examination.n 183 :: scrutiny
@@ -208,16 +208,16 @@ forget.v 207 :: forget
 forget.v 208 :: forget
 forget.v 209 :: forget
 forget.v 210 :: forget
-gall.n 211 :: saddle sore
+gall.n 211 :: bitterness
 gall.n 212 :: saddle sore
-gall.n 213 :: saddle sore
-gall.n 214 :: saddle sore
-gall.n 215 :: saddle sore
+gall.n 213 :: bitterness
+gall.n 214 :: bitterness
+gall.n 215 :: bitterness
 gall.n 216 :: insolence
-gall.n 217 :: saddle sore
-gall.n 218 :: saddle sore
-gall.n 219 :: saddle sore
-gall.n 220 :: saddle sore
+gall.n 217 :: bitterness
+gall.n 218 :: bitterness
+gall.n 219 :: bitterness
+gall.n 220 :: bitterness
 grim.a 221 :: relentless
 grim.a 222 :: relentless
 grim.a 223 :: relentless
@@ -229,7 +229,7 @@ grim.a 228 :: relentless
 grim.a 229 :: relentless
 grim.a 230 :: relentless
 lie.v 231 :: lie in
-lie.v 232 :: rest
+lie.v 232 :: lie down
 lie.v 233 :: lie in
 lie.v 234 :: lie in
 lie.v 235 :: lie in
@@ -290,11 +290,11 @@ rough.a 289 :: rough
 rough.a 290 :: rough
 run.v 291 :: operate
 run.v 292 :: run away
-run.v 293 :: run away
-run.v 294 :: run away
-run.v 295 :: run away
-run.v 296 :: run away
+run.v 293 :: tend
+run.v 294 :: tend
+run.v 295 :: tend
+run.v 296 :: tend
 run.v 297 :: extend
-run.v 298 :: run away
+run.v 298 :: tend
 run.v 299 :: run
-run.v 300 :: run away
+run.v 300 :: tend
