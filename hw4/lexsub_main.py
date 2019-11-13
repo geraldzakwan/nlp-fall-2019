@@ -126,12 +126,13 @@ def wn_frequency_predictor(context):
 # For odd window_size, pad='left' means that we put more words in the left
 # E.g. for window_size=5 and pad='left', there will be 3 words in the left_context
 # and 2 words in right_context. Pad='right' does the opposite.
-def get_cleaned_full_context(context, window_size=-1, pad='left'):
+def get_cleaned_full_context(context, window_size=-1, pad='left', when_to_normalize='before'):
     left_context = context.left_context
     right_context = context.right_context
 
-    left_context = normalize(left_context)
-    right_context = normalize(right_context)
+    if when_to_normalize == 'before':
+        left_context = normalize(left_context)
+        right_context = normalize(right_context)
 
     if window_size > 0:
         left_window_size = window_size // 2
@@ -147,6 +148,10 @@ def get_cleaned_full_context(context, window_size=-1, pad='left'):
 
         if len(right_context) > right_window_size:
             right_context = right_context[0:right_window_size]
+
+    if when_to_normalize == 'after':
+        left_context = normalize(left_context)
+        right_context = normalize(right_context)
 
     # Append left_context and right_context
     full_context = left_context + right_context
@@ -381,12 +386,38 @@ class Word2VecSubst(object):
 
         return list(considered_synonyms)
 
+    # def predict_best(self, context):
+    #     cleaned_full_context = get_cleaned_full_context(context, 2)
+    #
+    #     target_vector = np.zeros(300, dtype='float32')
+    #     added = False
+    #     for word in cleaned_full_context:
+    #         if word in self.model.wv:
+    #             added = True
+    #             target_vector = np.add(target_vector, self.model.wv[word])
+    #
+    #     if not added:
+    #         target_vector = self.model.wv[context.lemma]
+    #
+    #     possible_synonyms = list(get_candidates(context.lemma, context.pos))
+    #
+    #     # Assumption: We can ignore synonym candidates
+    #     # that are not in the word2vec vocabulary
+    #     considered_synonyms = []
+    #     for synonym in possible_synonyms:
+    #         if synonym in self.model.wv:
+    #             considered_synonyms.append(synonym)
+    #
+    #     # Because the inputs now are vectors, we can't use the
+    #     # most_similar_to_given function like the previous one
+    #     return self.get_nearest_synonym(target_vector, considered_synonyms)
+
     def predict_best(self, context):
         # In my experiment, window_size=2 is enough,
         # i.e. involves only the previous and the next word
         # It yields bigger precision and recall (0.127) with the same approach
         # as predict_nearest_with_context function
-        cleaned_full_context = get_cleaned_full_context(context, 2)
+        cleaned_full_context = get_cleaned_full_context(context, 8, 'right', 'after')
 
         target_vector = self.model.wv[context.lemma]
         for word in cleaned_full_context:
@@ -400,7 +431,7 @@ class Word2VecSubst(object):
             if synonym in self.model.wv:
                 considered_synonyms.append(synonym)
 
-        considered_synonyms = self.expand_candidate_synonyms(context.lemma, considered_synonyms)
+        # considered_synonyms = self.expand_candidate_synonyms(context.lemma, considered_synonyms)
 
         return self.get_nearest_synonym(target_vector, considered_synonyms)
 
