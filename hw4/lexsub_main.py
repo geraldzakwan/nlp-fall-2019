@@ -15,6 +15,7 @@ import string
 # Participate in the 4705 lexical substitution competition (optional): YES
 # Alias: peaky_blinders
 
+# Set of normalization functions
 def tokenize(s):
     s = "".join(" " if x in string.punctuation else x for x in s.lower())
     return s.split()
@@ -46,7 +47,8 @@ def remove_stopwords(sentence):
     return new_sentence
 
 def normalize(sentence):
-    # Some stack of preprocessings to normalize a list of tokens
+    # Some stack of preprocessings from above subfunctions
+    # to normalize a list of tokens
     sentence = remove_punctuation(sentence)
     sentence = lower(sentence)
     sentence = remove_stopwords(sentence)
@@ -302,15 +304,20 @@ class Word2VecSubst(object):
     def predict_nearest(self, context):
         possible_synonyms = list(get_candidates(context.lemma, context.pos))
 
-        # Question: What if synonyms OOV???
-        # For now, ignore
+        # Assumption: We can ignore synonym candidates
+        # that are not in the word2vec vocabulary
         considered_synonyms = []
         for synonym in possible_synonyms:
             if synonym in self.model.wv:
                 considered_synonyms.append(synonym)
 
+        # From my experiment, every lemma is in the word2vec vocabulary. Nothing to handle.
+        # We use the most_similar_to_given function provided by word2vec to
+        # select the most similar word from considered_synonyms by using cosine_similarity
         return self.model.most_similar_to_given(context.lemma, considered_synonyms)
 
+    # This function is needed because word2vec doesn't provide most_similar_to_given
+    # function with vector input (only for word input like above)
     def get_nearest_synonym(self, target_vector, considered_synonyms, metrics='cosine_similarity'):
         max_cosine_similarity = -1.0
         nearest_synonym = None
@@ -333,19 +340,48 @@ class Word2VecSubst(object):
         return nearest_synonym
 
     def predict_nearest_with_context(self, context):
-        cleaned_full_context = get_cleaned_full_context(context, 1, 'left')
+        # From Prof. Benajiba's description, we better limit the context to +-5 words.
+        # around the target word. Thus, I set window_size equals to 5 for this experiment.
+        # I use pad='right' because from my experiment it yields a better result.
+        # pad='left' gives 0.121 precision and recall, meanwhile pad='right' gives 0.124.
+        cleaned_full_context = get_cleaned_full_context(context, 5, 'right')
 
         target_vector = self.model.wv[context.lemma]
-
+        # Sum the target word vector with all word vectors in the context
+        # to obtain a single sentence vector
         for word in cleaned_full_context:
-            # Ignore oov this time
+            # Assumption: We can ignore context words
+            # that are not in the word2vec vocabulary
             if word in self.model.wv:
                 target_vector = np.add(target_vector, self.model.wv[word])
 
         possible_synonyms = list(get_candidates(context.lemma, context.pos))
 
-        # Question: What if synonyms OOV???
-        # For now, ignore
+        # Assumption: We can ignore synonym candidates
+        # that are not in the word2vec vocabulary
+        considered_synonyms = []
+        for synonym in possible_synonyms:
+            if synonym in self.model.wv:
+                considered_synonyms.append(synonym)
+
+        # Because the inputs now are vectors, we can't use the
+        # most_similar_to_given function like the previous one
+        return self.get_nearest_synonym(target_vector, considered_synonyms)
+
+    def predict_best(self, context):
+        # In my experiment, window_size=2 is enough,
+        # i.e. involves only the previous and the next word
+        # It yields bigger precision and recall (0.127) with the same approach
+        # as predict_nearest_with_context function
+        cleaned_full_context = get_cleaned_full_context(context, 2)
+
+        target_vector = self.model.wv[context.lemma]
+        for word in cleaned_full_context:
+            if word in self.model.wv:
+                target_vector = np.add(target_vector, self.model.wv[word])
+
+        possible_synonyms = list(get_candidates(context.lemma, context.pos))
+
         considered_synonyms = []
         for synonym in possible_synonyms:
             if synonym in self.model.wv:
@@ -356,8 +392,8 @@ class Word2VecSubst(object):
 if __name__=="__main__":
     # At submission time, this program should run your best predictor (part 6).
 
-    # W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
-    # predictor = Word2VecSubst(W2VMODEL_FILENAME)
+    W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
+    predictor = Word2VecSubst(W2VMODEL_FILENAME)
 
     # print(get_candidates('slow', 'a'))
     # print(len(get_candidates('slow', 'a')))
@@ -367,9 +403,9 @@ if __name__=="__main__":
 
     iter = 0
     for context in read_lexsub_xml(sys.argv[1]):
-        # iter = iter + 1
-        # if iter == 1:
-        #     print(get_cleaned_full_context(context, 1, 'left'))
+        iter = iter + 1
+        if iter == 1:
+            print(get_cleaned_full_context(context, 5, 'right'))
         # get_cleaned_full_context(context, 4)
         # print(type(context))
         # print(context)  # useful for debugging
@@ -379,13 +415,13 @@ if __name__=="__main__":
         # print(wn_frequency_predictor(context))
         # prediction = smurf_predictor(context)
         # prediction = wn_frequency_predictor(context)
-        prediction = wn_simple_lesk_predictor(context)
+        # prediction = wn_simple_lesk_predictor(context)
         # print(prediction)
         # sys.exit()
         # prediction = predictor.predict_nearest(context)
         # prediction = predictor.predict_nearest_with_context(context)
         # prediction = predictor.predict_nearest_with_context(context, 5, False)
         # prediction = predictor.predict_nearest_with_context(context, 1, False)
-        # sys.exit()
         # prediction = predictor.predict_nearest_with_context_average(context)
+        prediction = predictor.predict_best(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
