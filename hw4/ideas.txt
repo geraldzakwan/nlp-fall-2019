@@ -1,7 +1,7 @@
 IDEAS:
 
 - Add candidate space, e.g. synset of synonyms, misal depth 1 -> keknya gabisa soalnya di w2v, intelligent bukan synonym smart
-- Coba pake most similar w2v buat nambah candidate
+- Coba pake most similar w2v buat nambah candidate -> not a good idea, lama bgt runtime, untuk topn=5 bisa 3-4 detik per example
 - Normalize definition -> belom, how?
 See https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908\
 1. Lowercase -> DONE
@@ -130,3 +130,46 @@ Total = 298, attempted = 298
 precision = 0.127, recall = 0.127
 Total with mode 206 attempted 206
 precision = 0.180, recall = 0.180
+
+Time elapsed:
+133.83939290046692
+
+(venv) Kartikos-MBP:hw4 kartiko$ python lexsub_main.py lexsub_trial.xml
+Start
+Finish loading
+Time elapsed:
+177.8045220375061
+First iter
+Time elapsed:
+185.80667805671692
+bright.a 1 :: shining
+Time elapsed:
+185.80845189094543
+bright.a 2 :: shining
+Time elapsed:
+185.81019806861877
+bright.a 3 :: shining
+Time elapsed:
+185.8118178844452
+bright.a 4 :: shining
+
+(venv) Kartikos-MBP:hw4 kartiko$ python lexsub_main.py lexsub_trial.xml
+Start
+Finish loading
+Time elapsed:
+149.94995999336243
+First iter
+/Users/kartiko/iCloud Drive (Archive)/Desktop/workspace/venv/lib/python3.5/site-packages/gensim/matutils.py:737: FutureWarning: Conversion of the second argument of issubdtype from `int` to `np.signedinteger` is deprecated. In future, it will be treated as `np.int64 == np.dtype(int).type`.
+  if np.issubdtype(vec.dtype, np.int):
+Time elapsed:
+239.44334888458252
+bright.a 1 :: shining
+Time elapsed:
+242.3114788532257
+bright.a 2 :: shiny
+Time elapsed:
+245.44663095474243
+bright.a 3 :: shining
+Time elapsed:
+249.23272490501404
+bright.a 4 :: shining

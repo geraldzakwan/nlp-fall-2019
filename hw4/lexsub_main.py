@@ -11,6 +11,7 @@ import numpy as np
 
 from collections import Counter
 import string
+import time
 
 # Participate in the 4705 lexical substitution competition (optional): YES
 # Alias: peaky_blinders
@@ -368,6 +369,18 @@ class Word2VecSubst(object):
         # most_similar_to_given function like the previous one
         return self.get_nearest_synonym(target_vector, considered_synonyms)
 
+    def expand_candidate_synonyms(self, input_lemma, considered_synonyms, topn=5):
+        considered_synonyms = set(considered_synonyms)
+
+        new_synonyms = self.model.most_similar(positive=[input_lemma], topn=topn)
+        considered_synonyms.union(set(new_synonyms))
+
+        for synonym in considered_synonyms:
+            new_synonyms = self.model.most_similar(positive=[synonym], topn=topn)
+            considered_synonyms.union(set(new_synonyms))
+
+        return list(considered_synonyms)
+
     def predict_best(self, context):
         # In my experiment, window_size=2 is enough,
         # i.e. involves only the previous and the next word
@@ -387,13 +400,22 @@ class Word2VecSubst(object):
             if synonym in self.model.wv:
                 considered_synonyms.append(synonym)
 
+        considered_synonyms = self.expand_candidate_synonyms(context.lemma, considered_synonyms)
+
         return self.get_nearest_synonym(target_vector, considered_synonyms)
 
 if __name__=="__main__":
     # At submission time, this program should run your best predictor (part 6).
 
+    start = time.time()
+    # print('Start')
+
     W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
     predictor = Word2VecSubst(W2VMODEL_FILENAME)
+
+    # print('Finish loading')
+    # print('Time elapsed: ')
+    # print(time.time() - start)
 
     # print(get_candidates('slow', 'a'))
     # print(len(get_candidates('slow', 'a')))
@@ -404,8 +426,9 @@ if __name__=="__main__":
     iter = 0
     for context in read_lexsub_xml(sys.argv[1]):
         iter = iter + 1
-        if iter == 1:
-            print(get_cleaned_full_context(context, 5, 'right'))
+        # if iter == 1:
+        #     print('First iter')
+        #     print(get_cleaned_full_context(context, 5, 'right'))
         # get_cleaned_full_context(context, 4)
         # print(type(context))
         # print(context)  # useful for debugging
@@ -420,8 +443,12 @@ if __name__=="__main__":
         # sys.exit()
         # prediction = predictor.predict_nearest(context)
         # prediction = predictor.predict_nearest_with_context(context)
+        # prediction = predictor.predict_best(context)
         # prediction = predictor.predict_nearest_with_context(context, 5, False)
         # prediction = predictor.predict_nearest_with_context(context, 1, False)
         # prediction = predictor.predict_nearest_with_context_average(context)
         prediction = predictor.predict_best(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
+
+    print('Time elapsed: ')
+    print(time.time() - start)
