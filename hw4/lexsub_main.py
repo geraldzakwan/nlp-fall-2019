@@ -40,12 +40,18 @@ def remove_stopwords(sentence):
 
     new_sentence = []
     for word in sentence:
-        # word = word.lower()
-
         if word not in stop_words:
             new_sentence.append(word)
 
     return new_sentence
+
+def normalize(sentence):
+    # Some stack of preprocessings to normalize a list of tokens
+    sentence = remove_punctuation(sentence)
+    sentence = lower(sentence)
+    sentence = remove_stopwords(sentence)
+
+    return sentence
 
 def get_candidates(lemma, pos):
     # Return solution as a set to make sure unique lemmas are returned
@@ -114,6 +120,36 @@ def wn_frequency_predictor(context):
     # in the front of the list after sorted descendingly
     return synonyms_counter.most_common(1)[0][0]
 
+# For odd window_size, pad='left' means that we put more words in the left
+# E.g. for window_size=5 and pad='left', there will be 3 words in the left_context
+# and 2 words in right_context. Pad='right' does the opposite.
+def get_cleaned_full_context(context, window_size=-1, pad='left'):
+    left_context = context.left_context
+    right_context = context.right_context
+
+    left_context = normalize(left_context)
+    right_context = normalize(right_context)
+
+    if window_size > 0:
+        left_window_size = window_size // 2
+
+        if window_size % 2 == 1:
+            if pad == 'left':
+                left_window_size = left_window_size + 1
+
+        right_window_size = window_size - left_window_size
+
+        if len(left_context) > left_window_size:
+            left_context = left_context[len(left_context) - left_window_size:len(left_context)]
+
+        if len(right_context) > right_window_size:
+            right_context = right_context[0:right_window_size]
+
+    # Append left_context and right_context
+    full_context = left_context + right_context
+
+    return full_context
+
 def get_most_frequent_lexeme(synset, input_lemma):
     max_lexeme = None
     max_count = 0
@@ -127,7 +163,7 @@ def get_most_frequent_lexeme(synset, input_lemma):
                 max_count = lexeme.count()
 
     # Case when all counts equal to zero (not sure why WordNet
-    # would have count zero )
+    # would have count equals to zero for so many lexemes)
     if max_count == 0:
         # Just return the first one
         return synset.lemmas()[0]
@@ -171,19 +207,18 @@ def compute_overlap(cleaned_full_context, sense):
     overlap = 0
     cleaned_full_context_set = set(cleaned_full_context)
 
+    # Count overlap with synset definition & example
     raw_definition = sense.definition()
     definition = tokenize(raw_definition)
     examples = sense.examples()
 
     cleaned_definition = normalize(definition)
     cleaned_examples = normalize(examples)
-    # cleaned_definition = remove_stopwords(definition)
-    # cleaned_examples = remove_stopwords(examples)
 
     overlap += len(cleaned_full_context_set.intersection(set(cleaned_definition)))
     overlap += len(cleaned_full_context_set.intersection(set(cleaned_examples)))
 
-    # Add also the hypernym
+    # Count overlap with definitions & examples from synset hypernyms
     hypernyms = sense.hypernyms()
     for hypernym in hypernyms:
         raw_definition = hypernym.definition()
@@ -192,49 +227,11 @@ def compute_overlap(cleaned_full_context, sense):
 
         cleaned_definition = normalize(definition)
         cleaned_examples = normalize(examples)
-        # cleaned_definition = remove_stopwords(definition)
-        # cleaned_examples = remove_stopwords(examples)
 
         overlap += len(cleaned_full_context_set.intersection(set(cleaned_definition)))
         overlap += len(cleaned_full_context_set.intersection(set(cleaned_examples)))
 
     return overlap
-
-def normalize(sentence):
-    # Some stack of preprocessings to normalize a list of tokens
-    sentence = remove_punctuation(sentence)
-    sentence = lower(sentence)
-    sentence = remove_stopwords(sentence)
-
-    return sentence
-
-def get_cleaned_full_context(context, window_size=-1, pad='left'):
-    left_context = context.left_context
-    right_context = context.right_context
-
-    # Normalize them
-    left_context = normalize(left_context)
-    right_context = normalize(right_context)
-
-    if window_size > 0:
-        left_window_size = window_size // 2
-
-        if window_size % 2 == 1:
-            if pad == 'left':
-                left_window_size = left_window_size + 1
-
-        right_window_size = window_size - left_window_size
-
-        if len(left_context) > left_window_size:
-            left_context = left_context[len(left_context) - left_window_size:len(left_context)]
-
-        if len(right_context) > right_window_size:
-            right_context = right_context[0:right_window_size]
-
-    # Append left_context and right_context
-    full_context = left_context + right_context
-
-    return full_context
 
 def resolve_best_synset(synset_overlap_list):
     # Sort based on overlap_count, descendingly
@@ -259,7 +256,7 @@ def resolve_best_synset(synset_overlap_list):
     if len(synset_with_max_overlap) == 1:
         return synset_with_max_overlap[0][0]
 
-    # Resolve using get_most_frequent_synset,
+    # If more than one, resolve using get_most_frequent_synset,
     # this time using only synset with max overlap
     return get_most_frequent_synset(synset_with_max_overlap, context.lemma)
 
@@ -274,15 +271,16 @@ def wn_simple_lesk_predictor(context):
         # Important: Don't process synset that only has input lemma as its lexeme
         lexemes = synset.lemmas()
         proceed = True
+
         if len(lexemes) == 1:
             if lexemes[0].name() == context.lemma:
                 proceed = False
 
         if proceed:
             overlap = compute_overlap(cleaned_full_context, synset)
-
             synset_overlap_list.append((synset, overlap))
 
+    # Use subfunction because there are many cases
     best_synset = resolve_best_synset(synset_overlap_list)
 
     # Get the most frequent lexeme
@@ -354,30 +352,6 @@ class Word2VecSubst(object):
                 considered_synonyms.append(synonym)
 
         return self.get_nearest_synonym(target_vector, considered_synonyms)
-
-    # Don't do nothing
-    # def predict_nearest_with_context_average(self, context):
-    #     cleaned_full_context = get_cleaned_full_context(context, 5)
-    #
-    #     target_vector = self.model.wv[context.lemma]
-    #     for word in cleaned_full_context:
-    #         # Ignore oov this time
-    #         if word in self.model.wv:
-    #             target_vector = np.add(target_vector, self.model.wv[word])
-    #
-    #     # Take the average
-    #     target_vector = np.divide(target_vector, len(cleaned_full_context) + 1)
-    #
-    #     possible_synonyms = list(get_candidates(context.lemma, context.pos))
-    #
-    #     # Question: What if synonyms OOV???
-    #     # For now, ignore
-    #     considered_synonyms = []
-    #     for synonym in possible_synonyms:
-    #         if synonym in self.model.wv:
-    #             considered_synonyms.append(synonym)
-    #
-    #     return self.get_nearest_synonym(target_vector, considered_synonyms)
 
 if __name__=="__main__":
     # At submission time, this program should run your best predictor (part 6).
