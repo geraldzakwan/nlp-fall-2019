@@ -9,9 +9,9 @@ from nltk.corpus import stopwords
 import gensim
 import numpy as np
 
-from collections import Counter
+# Added imports (all Python default library)
+from collections import defaultdict
 import string
-import time
 
 # Participate in the 4705 lexical substitution competition (optional): YES
 # Alias: peaky_blinders
@@ -19,57 +19,59 @@ import time
 # Below is a set of normalization functions
 # HELPER FUNCTION
 def tokenize(s):
+    # I modify this function a bit to perform some more normalizations
+    # like removing numbers and stopwords
     s = "".join(" " if x in string.punctuation else x for x in s.lower())
-    return s.split()
+    return remove_stopwords(remove_numbers(s.split()))
 
 # HELPER FUNCTION
-def lower(sentence):
-    lowered_sentence = []
-    for word in sentence:
-        lowered_sentence.append(word.lower())
+def lower(list_of_tokens):
+    lowered_list_of_tokens = []
+    for word in list_of_tokens:
+        lowered_list_of_tokens.append(word.lower())
 
-    return lowered_sentence
+    return lowered_list_of_tokens
 
 # HELPER FUNCTION
-def remove_punctuation(sentence):
-    cleaned_sentence = []
-    for word in sentence:
+def remove_punctuation(list_of_tokens):
+    cleaned_list_of_tokens = []
+    for word in list_of_tokens:
         if word not in string.punctuation:
-            cleaned_sentence.append(word)
+            cleaned_list_of_tokens.append(word)
 
-    return cleaned_sentence
+    return cleaned_list_of_tokens
 
 # HELPER FUNCTION
-def remove_numbers(sentence):
-    cleaned_sentence = []
-    for word in sentence:
+def remove_numbers(list_of_tokens):
+    cleaned_list_of_tokens = []
+    for word in list_of_tokens:
         if not word.isnumeric():
-            cleaned_sentence.append(word)
+            cleaned_list_of_tokens.append(word)
 
-    return cleaned_sentence
+    return cleaned_list_of_tokens
 
 # HELPER FUNCTION
-def remove_stopwords(sentence):
+def remove_stopwords(list_of_tokens):
     stop_words = stopwords.words('english')
     stop_words = set(stop_words)
 
-    new_sentence = []
-    for word in sentence:
+    new_list_of_tokens = []
+    for word in list_of_tokens:
         if word not in stop_words:
-            new_sentence.append(word)
+            new_list_of_tokens.append(word)
 
-    return new_sentence
+    return new_list_of_tokens
 
 # HELPER FUNCTION
-def normalize(sentence):
+def normalize(list_of_tokens):
     # Some stack of preprocessings from above subfunctions
     # to normalize a list of tokens
-    sentence = remove_punctuation(sentence)
-    sentence = remove_numbers(sentence)
-    sentence = lower(sentence)
-    sentence = remove_stopwords(sentence)
+    list_of_tokens = remove_punctuation(list_of_tokens)
+    list_of_tokens = remove_numbers(list_of_tokens)
+    list_of_tokens = lower(list_of_tokens)
+    list_of_tokens = remove_stopwords(list_of_tokens)
 
-    return sentence
+    return list_of_tokens
 
 # PART 1
 def get_candidates(lemma, pos):
@@ -111,7 +113,7 @@ def smurf_predictor(context):
 # PART 2
 def wn_frequency_predictor(context):
     # Counter with lemma as key and its count as value
-    synonyms_counter = Counter()
+    synonyms_counter = defaultdict(int)
 
     # Retrieve all lexemes for the particular lemma and pos
     lexemes = wn.lemmas(context.lemma, pos=context.pos)
@@ -136,9 +138,30 @@ def wn_frequency_predictor(context):
                 # if it appears together with input lemma in multiple synsets
                 synonyms_counter[candidate_lemma_name] += candidate_lemma.count()
 
-    # If there is a tie, pick an arbitrary lemma, whatever comes first
-    # in the front of the list after sorted descendingly
-    return synonyms_counter.most_common(1)[0][0]
+    # Sort descendingly based on the count
+    synonyms_list = []
+    for synonym in synonyms_counter:
+        synonyms_list.append((synonym, synonyms_counter[synonym]))
+
+    synonyms_list = sorted(synonyms_list, key=lambda x: x[1], reverse=True)
+
+    # Check if there are more than one synonyms with maximum occurence
+    max_count = synonyms_list[0][1]
+    max_synonyms = []
+
+    for i in range(0, len(synonyms_list)):
+        if synonyms_list[i][1] < max_count:
+            break
+
+        max_synonyms.append(synonyms_list[i][0])
+
+    # If there are, sort the synonyms descendingly based on the alphabet
+    # and pick the synonym at the front of the sorted list
+    # No particular reason, just to make sure thet the result is consistent
+    if len(max_synonyms) > 1:
+        max_synonyms = sorted(max_synonyms, reverse=True)
+
+    return max_synonyms[0]
 
 # PART 3
 def wn_simple_lesk_predictor(context):
@@ -212,6 +235,7 @@ def get_cleaned_full_context(context, window_size=-1, pad='left', when_to_normal
     return full_context
 
 # HELPER FUNCTION
+# TIE BREAK?
 def get_most_frequent_lexeme(synset, input_lemma):
     max_lexeme = None
     max_count = 0
@@ -233,6 +257,7 @@ def get_most_frequent_lexeme(synset, input_lemma):
     return max_lexeme
 
 # HELPER FUNCTION
+# TIE BREAK?
 def get_most_frequent_synset(synset_overlap_list, input_lemma):
     # Set initial max_count = -1 to make sure that most_frequent_synset
     # will not be None if all lexeme counts are zero
@@ -272,11 +297,10 @@ def compute_overlap(cleaned_full_context, sense):
     cleaned_full_context_set = set(cleaned_full_context)
 
     # Count overlap with synset definition & example
-    raw_definition = sense.definition()
-    definition = tokenize(raw_definition)
+    definition = sense.definition()
     examples = sense.examples()
 
-    cleaned_definition = normalize(definition)
+    cleaned_definition = tokenize(definition)
     cleaned_examples = normalize(examples)
 
     overlap += len(cleaned_full_context_set.intersection(set(cleaned_definition)))
@@ -285,11 +309,10 @@ def compute_overlap(cleaned_full_context, sense):
     # Count overlap with definitions & examples from synset hypernyms
     hypernyms = sense.hypernyms()
     for hypernym in hypernyms:
-        raw_definition = hypernym.definition()
-        definition = tokenize(raw_definition)
+        definition = hypernym.definition()
         examples = hypernym.examples()
 
-        cleaned_definition = normalize(definition)
+        cleaned_definition = tokenize(definition)
         cleaned_examples = normalize(examples)
 
         overlap += len(cleaned_full_context_set.intersection(set(cleaned_definition)))
@@ -356,6 +379,7 @@ def get_best_predictor_candidates(lemma, pos):
             if is_candidate_lemma_valid(candidate_lemma_name, lemma):
                 # Check if lemma contains multiple words
                 if len(candidate_lemma_name.split('_')) > 1:
+                    # Replace '_' with '-' for adjective or adverb, e.g. 'well-fit'
                     if pos == 'a' or pos == 'r':
                         candidate_lemma_name = candidate_lemma_name.replace('_', '-')
                     else:
@@ -375,6 +399,7 @@ def get_best_predictor_candidates(lemma, pos):
                 if is_candidate_lemma_valid(candidate_lemma_name, lemma):
                     # Check if lemma contains multiple words
                     if len(candidate_lemma_name.split('_')) > 1:
+                        # Replace '_' with '-' for adjective or adverb, e.g. 'well-fit'
                         if pos == 'a' or pos == 'r':
                             candidate_lemma_name = candidate_lemma_name.replace('_', '-')
                         else:
@@ -392,27 +417,7 @@ class Word2VecSubst(object):
     def __init__(self, filename):
         self.model = gensim.models.KeyedVectors.load_word2vec_format(filename, binary=True)
 
-    # PART 4
-    def predict_nearest(self, context):
-        possible_synonyms = list(get_candidates(context.lemma, context.pos))
-
-        # Assumption: We can ignore synonym candidates
-        # that are not in the word2vec vocabulary
-        considered_synonyms = []
-        for synonym in possible_synonyms:
-            if synonym in self.model.wv:
-                considered_synonyms.append(synonym)
-
-        # From my experiment, every lemma is in the word2vec vocabulary. Nothing to handle.
-        target_vector = self.model.wv[context.lemma]
-
-        return self.get_nearest_synonym(target_vector, considered_synonyms)
-
-        # We can also use the most_similar_to_given function provided by word2vec to
-        # select the most similar word from considered_synonyms by using cosine_similarity
-        # This yields the same result.
-        # return self.model.most_similar_to_given(context.lemma, considered_synonyms)
-
+    # HELPER FUNCTION
     # This function is needed because word2vec doesn't provide most_similar_to_given
     # function with vector input (only for word input like above)
     def get_nearest_synonym(self, target_vector, considered_synonyms, metrics='cosine_similarity'):
@@ -435,6 +440,27 @@ class Word2VecSubst(object):
                 max_cosine_similarity = cosine_similarity
 
         return nearest_synonym
+
+    # PART 4
+    def predict_nearest(self, context):
+        possible_synonyms = list(get_candidates(context.lemma, context.pos))
+
+        # Assumption: We can ignore synonym candidates
+        # that are not in the word2vec vocabulary
+        considered_synonyms = []
+        for synonym in possible_synonyms:
+            if synonym in self.model.wv:
+                considered_synonyms.append(synonym)
+
+        # From my experiment, every lemma is in the word2vec vocabulary. Nothing to handle.
+        target_vector = self.model.wv[context.lemma]
+
+        return self.get_nearest_synonym(target_vector, considered_synonyms)
+
+        # We can also use the most_similar_to_given function provided by word2vec to
+        # select the most similar word from considered_synonyms by using cosine_similarity
+        # This yields the same result.
+        # return self.model.most_similar_to_given(context.lemma, considered_synonyms)
 
     # PART 5
     def predict_nearest_with_context(self, context):
@@ -491,17 +517,18 @@ if __name__=="__main__":
     # print(get_candidates('slow', 'a'))
     # {'sluggish', 'obtuse', 'dim', 'tedious', 'dumb', 'irksome', 'ho-hum', 'dull', 'dense', 'wearisome', 'deadening', 'tiresome', 'boring'}
 
-    # W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
-    # predictor = Word2VecSubst(W2VMODEL_FILENAME)
+    # For PART 4, 5 and 6 uncomment these two lines
+    W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
+    predictor = Word2VecSubst(W2VMODEL_FILENAME)
 
     for context in read_lexsub_xml(sys.argv[1]):
         # print(context)  # useful for debugging
         # prediction = smurf_predictor(context)
 
-        # PART 2 - WordNet Frequency Baseline -> 0.98 precision and recall
-        prediction = wn_frequency_predictor(context)
+        # PART 2 - WordNet Frequency Baseline -> 0.099 precision and recall
+        # prediction = wn_frequency_predictor(context)
 
-        # PART 3 - Simple Lesk Algorithm -> 0.89 precision and recall
+        # PART 3 - Simple Lesk Algorithm -> 0.089 precision and recall
         # prediction = wn_simple_lesk_predictor(context)
 
         # PART 4 - Most Similar Synonym -> 0.115 precision and recall
@@ -511,5 +538,5 @@ if __name__=="__main__":
         # prediction = predictor.predict_nearest_with_context(context)
 
         # PART 6 - Best Predictor
-        # prediction = predictor.predict_best(context)
+        prediction = predictor.predict_best(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
