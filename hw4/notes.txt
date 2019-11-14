@@ -15,3 +15,26 @@ Include hypernym -> 0.136 yeayy
 
 best_7
 Include hyponyms too, but it becomes super low: 0.119
+
+Ide:
+Handle yg examination -> exam / test -> DONE
+Hypernym cmn buat noun?
+hybridizing jadi hybrid
+
+best_8_low
+exclude examination -> exam and dark -> darkness
+Malah ngurang 0.135
+
+best_8
+exclude examination -> exam, window_size 8
+0.139
+
+Running time: 2-3 minutes
+best_9 -> try different context size
+10 -> 0.134
+9 right -> 0.137
+9 left -> 0.135
+8 -> 0.139
+7 right -> 0.134
+7 left -> 0.141
+6 -> 0.137

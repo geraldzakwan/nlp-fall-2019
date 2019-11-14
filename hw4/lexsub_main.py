@@ -80,7 +80,7 @@ def get_candidates(lemma, pos):
         # Get the lexemes from the synset
         for candidate_lemma in synset.lemmas():
             # Retrieve the name from a lemma structure
-            candidate_lemma_name = candidate_lemma.name()
+            candidate_lemma_name = candidate_lemma.name().lower()
 
             # Make sure we don't add input lemma as solution
             if candidate_lemma_name != lemma:
@@ -115,7 +115,7 @@ def wn_frequency_predictor(context):
 
         # Get the lemmas from the synset
         for candidate_lemma in synset.lemmas():
-            candidate_lemma_name = candidate_lemma.name()
+            candidate_lemma_name = candidate_lemma.name().lower()
 
             # Make sure we don't add input lemma as solution
             if candidate_lemma_name != context.lemma:
@@ -311,6 +311,14 @@ def wn_simple_lesk_predictor(context):
 
     return lemma_name
 
+def is_candidate_lemma_valid(candidate_lemma_name, lemma):
+    # if candidate_lemma_name != lemma:
+    # if lemma not in candidate_lemma_name and candidate_lemma_name not in lemma:
+    if candidate_lemma_name not in lemma:
+        return True
+
+    return False
+
 # NOTE: This is not for Part 1
 def get_best_predictor_candidates(lemma, pos):
     # Return solution as a set to make sure unique lemmas are returned
@@ -327,9 +335,9 @@ def get_best_predictor_candidates(lemma, pos):
         # Get the lexemes from the synset
         for candidate_lemma in synset.lemmas():
             # Retrieve the name from a lemma structure
-            candidate_lemma_name = candidate_lemma.name()
+            candidate_lemma_name = candidate_lemma.name().lower()
 
-            if candidate_lemma_name != lemma:
+            if is_candidate_lemma_valid(candidate_lemma_name, lemma):
                 # Check if lemma contains multiple words
                 if len(candidate_lemma_name.split('_')) > 1:
                     if pos == 'a' or pos == 'r':
@@ -346,9 +354,9 @@ def get_best_predictor_candidates(lemma, pos):
         for hi_syn in hypernym_synsets:
             for candidate_lemma in hi_syn.lemmas():
                 # Retrieve the name from a lemma structure
-                candidate_lemma_name = candidate_lemma.name()
+                candidate_lemma_name = candidate_lemma.name().lower()
 
-                if candidate_lemma_name != lemma:
+                if is_candidate_lemma_valid(candidate_lemma_name, lemma):
                     # Check if lemma contains multiple words
                     if len(candidate_lemma_name.split('_')) > 1:
                         if pos == 'a' or pos == 'r':
@@ -364,7 +372,7 @@ def get_best_predictor_candidates(lemma, pos):
         # for ho_syn in hyponym_synsets:
         #     for candidate_lemma in ho_syn.lemmas():
         #         # Retrieve the name from a lemma structure
-        #         candidate_lemma_name = candidate_lemma.name()
+        #         candidate_lemma_name = candidate_lemma.name().lower()
         #
         #         if candidate_lemma_name != lemma:
         #             # Check if lemma contains multiple words
@@ -379,15 +387,15 @@ def get_best_predictor_candidates(lemma, pos):
         #             possible_synonyms.add(candidate_lemma_name)
 
     # if pos == 'a' or pos == 'v':
-    if pos == 'v':
-        added_synonyms = set([])
-
-        for synonym in list(possible_synonyms):
-            if len(synonym) > 3:
-                if synonym[len(synonym) - 3:len(synonym)] != 'ing':
-                    added_synonyms.add(synonym + 'ing')
-
-        possible_synonyms.union(added_synonyms)
+    # if pos == 'v':
+    #     added_synonyms = set([])
+    #
+    #     for synonym in list(possible_synonyms):
+    #         if len(synonym) > 3:
+    #             if synonym[len(synonym) - 3:len(synonym)] != 'ing':
+    #                 added_synonyms.add(synonym + 'ing')
+    #
+    #     possible_synonyms.union(added_synonyms)
 
     # Return the set
     return possible_synonyms
@@ -464,50 +472,8 @@ class Word2VecSubst(object):
         # most_similar_to_given function like the previous one
         return self.get_nearest_synonym(target_vector, considered_synonyms)
 
-    def expand_candidate_synonyms(self, input_lemma, considered_synonyms, topn=5):
-        considered_synonyms = set(considered_synonyms)
-
-        new_synonyms = self.model.most_similar(positive=[input_lemma], topn=topn)
-        considered_synonyms.union(set(new_synonyms))
-
-        for synonym in considered_synonyms:
-            new_synonyms = self.model.most_similar(positive=[synonym], topn=topn)
-            considered_synonyms.union(set(new_synonyms))
-
-        return list(considered_synonyms)
-
-    # def predict_best(self, context):
-    #     cleaned_full_context = get_cleaned_full_context(context, 2)
-    #
-    #     target_vector = np.zeros(300, dtype='float32')
-    #     added = False
-    #     for word in cleaned_full_context:
-    #         if word in self.model.wv:
-    #             added = True
-    #             target_vector = np.add(target_vector, self.model.wv[word])
-    #
-    #     if not added:
-    #         target_vector = self.model.wv[context.lemma]
-    #
-    #     possible_synonyms = list(get_candidates(context.lemma, context.pos))
-    #
-    #     # Assumption: We can ignore synonym candidates
-    #     # that are not in the word2vec vocabulary
-    #     considered_synonyms = []
-    #     for synonym in possible_synonyms:
-    #         if synonym in self.model.wv:
-    #             considered_synonyms.append(synonym)
-    #
-    #     # Because the inputs now are vectors, we can't use the
-    #     # most_similar_to_given function like the previous one
-    #     return self.get_nearest_synonym(target_vector, considered_synonyms)
-
     def predict_best(self, context):
-        # In my experiment, window_size=2 is enough,
-        # i.e. involves only the previous and the next word
-        # It yields bigger precision and recall (0.127) with the same approach
-        # as predict_nearest_with_context function
-        cleaned_full_context = get_cleaned_full_context(context, 8, 'right', 'after')
+        cleaned_full_context = get_cleaned_full_context(context, 7, 'left', 'after')
 
         target_vector = self.model.wv[context.lemma]
         for word in cleaned_full_context:
@@ -521,55 +487,33 @@ class Word2VecSubst(object):
             if synonym in self.model.wv:
                 considered_synonyms.append(synonym)
 
-        # considered_synonyms = self.expand_candidate_synonyms(context.lemma, considered_synonyms)
-
         return self.get_nearest_synonym(target_vector, considered_synonyms)
 
 if __name__=="__main__":
     # At submission time, this program should run your best predictor (part 6).
 
-    start = time.time()
-    # print('Start')
+    # Part 1
+    # print(get_candidates('slow', 'a'))
 
     W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
     predictor = Word2VecSubst(W2VMODEL_FILENAME)
 
-    # print('Finish loading')
-    # print('Time elapsed: ')
-    # print(time.time() - start)
-
-    # print(get_candidates('slow', 'a'))
-    # print(len(get_candidates('slow', 'a')))
-
-    # print(remove_stopwords(['i', 'love', 'you']))
-    # sys.exit()
-
-    iter = 0
     for context in read_lexsub_xml(sys.argv[1]):
-        iter = iter + 1
-        # if iter == 1:
-        #     print('First iter')
-        #     print(get_cleaned_full_context(context, 5, 'right'))
-        # get_cleaned_full_context(context, 4)
-        # print(type(context))
         # print(context)  # useful for debugging
-        # print(context.pos)
-        # get_candidates(context.lemma, context.pos)
-        # get_candidates('slow', 'a')
-        # print(wn_frequency_predictor(context))
         # prediction = smurf_predictor(context)
+
+        # Part 2 - WordNet Frequency Baseline -> 0.98 precision and recall
         # prediction = wn_frequency_predictor(context)
+
+        # Part 3 - Simple Lesk Algorithm -> 0.89 precision and recall
         # prediction = wn_simple_lesk_predictor(context)
-        # print(prediction)
-        # sys.exit()
+
+        # Part 4 - Most Similar Synonym -> 0.115 precision and recall
         # prediction = predictor.predict_nearest(context)
+
+        # Part 5 - Context and Word Embeddings -> 0.124 precision and recall
         # prediction = predictor.predict_nearest_with_context(context)
-        # prediction = predictor.predict_best(context)
-        # prediction = predictor.predict_nearest_with_context(context, 5, False)
-        # prediction = predictor.predict_nearest_with_context(context, 1, False)
-        # prediction = predictor.predict_nearest_with_context_average(context)
+
+        # Part 6 - Best Predictor
         prediction = predictor.predict_best(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
-
-    # print('Time elapsed: ')
-    # print(time.time() - start)
