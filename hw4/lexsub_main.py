@@ -16,11 +16,13 @@ import time
 # Participate in the 4705 lexical substitution competition (optional): YES
 # Alias: peaky_blinders
 
-# Set of normalization functions
+# Below is a set of normalization functions
+# HELPER FUNCTION
 def tokenize(s):
     s = "".join(" " if x in string.punctuation else x for x in s.lower())
     return s.split()
 
+# HELPER FUNCTION
 def lower(sentence):
     lowered_sentence = []
     for word in sentence:
@@ -28,6 +30,7 @@ def lower(sentence):
 
     return lowered_sentence
 
+# HELPER FUNCTION
 def remove_punctuation(sentence):
     cleaned_sentence = []
     for word in sentence:
@@ -36,6 +39,7 @@ def remove_punctuation(sentence):
 
     return cleaned_sentence
 
+# HELPER FUNCTION
 def remove_numbers(sentence):
     cleaned_sentence = []
     for word in sentence:
@@ -44,6 +48,7 @@ def remove_numbers(sentence):
 
     return cleaned_sentence
 
+# HELPER FUNCTION
 def remove_stopwords(sentence):
     stop_words = stopwords.words('english')
     stop_words = set(stop_words)
@@ -55,6 +60,7 @@ def remove_stopwords(sentence):
 
     return new_sentence
 
+# HELPER FUNCTION
 def normalize(sentence):
     # Some stack of preprocessings from above subfunctions
     # to normalize a list of tokens
@@ -65,6 +71,7 @@ def normalize(sentence):
 
     return sentence
 
+# PART 1
 def get_candidates(lemma, pos):
     # Return solution as a set to make sure unique lemmas are returned
     possible_synonyms = set([])
@@ -101,6 +108,7 @@ def smurf_predictor(context):
     """
     return 'smurf'
 
+# PART 2
 def wn_frequency_predictor(context):
     # Counter with lemma as key and its count as value
     synonyms_counter = Counter()
@@ -132,6 +140,42 @@ def wn_frequency_predictor(context):
     # in the front of the list after sorted descendingly
     return synonyms_counter.most_common(1)[0][0]
 
+# PART 3
+def wn_simple_lesk_predictor(context):
+    cleaned_full_context = get_cleaned_full_context(context)
+
+    # List of tuple: (synset, overlap_count with context)
+    synset_overlap_list = []
+
+    # Iterate over synsets
+    for synset in wn.synsets(context.lemma, context.pos):
+        # Important: Don't process synset that only has input lemma as its lexeme
+        lexemes = synset.lemmas()
+        proceed = True
+
+        if len(lexemes) == 1:
+            if lexemes[0].name() == context.lemma:
+                proceed = False
+
+        if proceed:
+            overlap = compute_overlap(cleaned_full_context, synset)
+            synset_overlap_list.append((synset, overlap))
+
+    # Use subfunction because there are many cases
+    best_synset = resolve_best_synset(synset_overlap_list)
+
+    # Get the most frequent lexeme
+    most_frequent_lexeme = get_most_frequent_lexeme(best_synset, context.lemma)
+    lemma_name = most_frequent_lexeme.name()
+
+    # Check if lemma name contains multiple words
+    if len(lemma_name.split('_')) > 1:
+        # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+        lemma_name = lemma_name.replace('_', ' ')
+
+    return lemma_name
+
+# HELPER FUNCTION
 # For odd window_size, pad='left' means that we put more words in the left
 # E.g. for window_size=5 and pad='left', there will be 3 words in the left_context
 # and 2 words in right_context. Pad='right' does the opposite.
@@ -167,6 +211,7 @@ def get_cleaned_full_context(context, window_size=-1, pad='left', when_to_normal
 
     return full_context
 
+# HELPER FUNCTION
 def get_most_frequent_lexeme(synset, input_lemma):
     max_lexeme = None
     max_count = 0
@@ -187,6 +232,7 @@ def get_most_frequent_lexeme(synset, input_lemma):
 
     return max_lexeme
 
+# HELPER FUNCTION
 def get_most_frequent_synset(synset_overlap_list, input_lemma):
     # Set initial max_count = -1 to make sure that most_frequent_synset
     # will not be None if all lexeme counts are zero
@@ -218,6 +264,7 @@ def get_most_frequent_synset(synset_overlap_list, input_lemma):
 
     return most_frequent_synset
 
+# HELPER FUNCTION
 # Assumption: We don't count duplicate overlap
 # So we can use set to quickly compute it (using intersection)
 def compute_overlap(cleaned_full_context, sense):
@@ -250,6 +297,7 @@ def compute_overlap(cleaned_full_context, sense):
 
     return overlap
 
+# HELPER FUNCTION
 def resolve_best_synset(synset_overlap_list):
     # Sort based on overlap_count, descendingly
     synset_overlap_list = sorted(synset_overlap_list, key=lambda x: x[1], reverse=True)
@@ -277,40 +325,7 @@ def resolve_best_synset(synset_overlap_list):
     # this time using only synset with max overlap
     return get_most_frequent_synset(synset_with_max_overlap, context.lemma)
 
-def wn_simple_lesk_predictor(context):
-    cleaned_full_context = get_cleaned_full_context(context)
-
-    # List of tuple: (synset, overlap_count with context)
-    synset_overlap_list = []
-
-    # Iterate over synsets
-    for synset in wn.synsets(context.lemma, context.pos):
-        # Important: Don't process synset that only has input lemma as its lexeme
-        lexemes = synset.lemmas()
-        proceed = True
-
-        if len(lexemes) == 1:
-            if lexemes[0].name() == context.lemma:
-                proceed = False
-
-        if proceed:
-            overlap = compute_overlap(cleaned_full_context, synset)
-            synset_overlap_list.append((synset, overlap))
-
-    # Use subfunction because there are many cases
-    best_synset = resolve_best_synset(synset_overlap_list)
-
-    # Get the most frequent lexeme
-    most_frequent_lexeme = get_most_frequent_lexeme(best_synset, context.lemma)
-    lemma_name = most_frequent_lexeme.name()
-
-    # Check if lemma name contains multiple words
-    if len(lemma_name.split('_')) > 1:
-        # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
-        lemma_name = lemma_name.replace('_', ' ')
-
-    return lemma_name
-
+# HELPER FUNCTION
 def is_candidate_lemma_valid(candidate_lemma_name, lemma):
     # if candidate_lemma_name != lemma:
     # if lemma not in candidate_lemma_name and candidate_lemma_name not in lemma:
@@ -319,7 +334,8 @@ def is_candidate_lemma_valid(candidate_lemma_name, lemma):
 
     return False
 
-# NOTE: This is not for Part 1
+# HELPER FUNCTION
+# NOTE: THIS IS NOTE FOR PART 1
 def get_best_predictor_candidates(lemma, pos):
     # Return solution as a set to make sure unique lemmas are returned
     possible_synonyms = set([])
@@ -368,35 +384,6 @@ def get_best_predictor_candidates(lemma, pos):
                     # Add lemma to the solution
                     possible_synonyms.add(candidate_lemma_name)
 
-        # hyponym_synsets = synset.hyponyms()
-        # for ho_syn in hyponym_synsets:
-        #     for candidate_lemma in ho_syn.lemmas():
-        #         # Retrieve the name from a lemma structure
-        #         candidate_lemma_name = candidate_lemma.name().lower()
-        #
-        #         if candidate_lemma_name != lemma:
-        #             # Check if lemma contains multiple words
-        #             if len(candidate_lemma_name.split('_')) > 1:
-        #                 if pos == 'a' or pos == 'r':
-        #                     candidate_lemma_name = candidate_lemma_name.replace('_', '-')
-        #                 else:
-        #                     # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
-        #                     candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
-        #
-        #             # Add lemma to the solution
-        #             possible_synonyms.add(candidate_lemma_name)
-
-    # if pos == 'a' or pos == 'v':
-    # if pos == 'v':
-    #     added_synonyms = set([])
-    #
-    #     for synonym in list(possible_synonyms):
-    #         if len(synonym) > 3:
-    #             if synonym[len(synonym) - 3:len(synonym)] != 'ing':
-    #                 added_synonyms.add(synonym + 'ing')
-    #
-    #     possible_synonyms.union(added_synonyms)
-
     # Return the set
     return possible_synonyms
 
@@ -405,6 +392,7 @@ class Word2VecSubst(object):
     def __init__(self, filename):
         self.model = gensim.models.KeyedVectors.load_word2vec_format(filename, binary=True)
 
+    # PART 4
     def predict_nearest(self, context):
         possible_synonyms = list(get_candidates(context.lemma, context.pos))
 
@@ -416,9 +404,14 @@ class Word2VecSubst(object):
                 considered_synonyms.append(synonym)
 
         # From my experiment, every lemma is in the word2vec vocabulary. Nothing to handle.
-        # We use the most_similar_to_given function provided by word2vec to
+        target_vector = self.model.wv[context.lemma]
+
+        return self.get_nearest_synonym(target_vector, considered_synonyms)
+
+        # We can also use the most_similar_to_given function provided by word2vec to
         # select the most similar word from considered_synonyms by using cosine_similarity
-        return self.model.most_similar_to_given(context.lemma, considered_synonyms)
+        # This yields the same result.
+        # return self.model.most_similar_to_given(context.lemma, considered_synonyms)
 
     # This function is needed because word2vec doesn't provide most_similar_to_given
     # function with vector input (only for word input like above)
@@ -435,7 +428,7 @@ class Word2VecSubst(object):
                 syn_norm = np.linalg.norm(syn_vector)
                 cosine_similarity = dot_prod / (target_norm * syn_norm)
             else:
-                cosine_similarity = -1.0
+                raise Exception('Metrics is not yet supported')
 
             if cosine_similarity > max_cosine_similarity:
                 nearest_synonym = considered_synonyms[i]
@@ -443,6 +436,7 @@ class Word2VecSubst(object):
 
         return nearest_synonym
 
+    # PART 5
     def predict_nearest_with_context(self, context):
         # From Prof. Benajiba's description, we better limit the context to +-5 words.
         # around the target word. Thus, I set window_size equals to 5 for this experiment.
@@ -472,6 +466,7 @@ class Word2VecSubst(object):
         # most_similar_to_given function like the previous one
         return self.get_nearest_synonym(target_vector, considered_synonyms)
 
+    # PART 6
     def predict_best(self, context):
         cleaned_full_context = get_cleaned_full_context(context, 7, 'left', 'after')
 
@@ -492,28 +487,29 @@ class Word2VecSubst(object):
 if __name__=="__main__":
     # At submission time, this program should run your best predictor (part 6).
 
-    # Part 1
+    # PART 1
     # print(get_candidates('slow', 'a'))
+    # {'sluggish', 'obtuse', 'dim', 'tedious', 'dumb', 'irksome', 'ho-hum', 'dull', 'dense', 'wearisome', 'deadening', 'tiresome', 'boring'}
 
-    W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
-    predictor = Word2VecSubst(W2VMODEL_FILENAME)
+    # W2VMODEL_FILENAME = 'GoogleNews-vectors-negative300.bin.gz'
+    # predictor = Word2VecSubst(W2VMODEL_FILENAME)
 
     for context in read_lexsub_xml(sys.argv[1]):
         # print(context)  # useful for debugging
         # prediction = smurf_predictor(context)
 
-        # Part 2 - WordNet Frequency Baseline -> 0.98 precision and recall
-        # prediction = wn_frequency_predictor(context)
+        # PART 2 - WordNet Frequency Baseline -> 0.98 precision and recall
+        prediction = wn_frequency_predictor(context)
 
-        # Part 3 - Simple Lesk Algorithm -> 0.89 precision and recall
+        # PART 3 - Simple Lesk Algorithm -> 0.89 precision and recall
         # prediction = wn_simple_lesk_predictor(context)
 
-        # Part 4 - Most Similar Synonym -> 0.115 precision and recall
+        # PART 4 - Most Similar Synonym -> 0.115 precision and recall
         # prediction = predictor.predict_nearest(context)
 
-        # Part 5 - Context and Word Embeddings -> 0.124 precision and recall
+        # PART 5 - Context and Word Embeddings -> 0.124 precision and recall
         # prediction = predictor.predict_nearest_with_context(context)
 
-        # Part 6 - Best Predictor
-        prediction = predictor.predict_best(context)
+        # PART 6 - Best Predictor
+        # prediction = predictor.predict_best(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
