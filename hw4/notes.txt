@@ -1,0 +1,11 @@
+R1 -> best
+0.127 -> refinement cmn window_size jadi 2 (prev and next word)
+
+R2 -> best_coba_coba
+0.129 -> refinement nya window_size jadi 8 tapi preprocessingnya setelah di slice ('after')
+
+R3 -> best_coba_coba_2
+0.127 -> refinement if lemma not in candidate_lemma_name or vice versa. Conf lain ikut R2
+
+R4 -> best_coba_coba_3
+0.127 -> Coba" nambahin candidate +ing and window size 10

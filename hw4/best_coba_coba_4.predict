@@ -1,4 +1,4 @@
-bright.a 1 :: shining
+bright.a 1 :: shiny
 bright.a 2 :: shiny
 bright.a 3 :: shining
 bright.a 4 :: shining
@@ -7,7 +7,7 @@ bright.a 6 :: brilliant
 bright.a 7 :: shining
 bright.a 8 :: shiny
 bright.a 9 :: shining
-bright.a 10 :: shining
+bright.a 10 :: promising
 film.n 11 :: movie
 film.n 12 :: movie
 film.n 13 :: movie
@@ -24,7 +24,7 @@ take.v 23 :: have
 take.v 24 :: have
 take.v 25 :: assume
 take.v 26 :: need
-take.v 27 :: get
+take.v 27 :: make
 take.v 28 :: get
 take.v 29 :: hold
 take.v 30 :: assume
@@ -41,7 +41,7 @@ tight.r 40 :: fast
 bar.n 41 :: taproom
 bar.n 42 :: barroom
 bar.n 43 :: saloon
-bar.n 44 :: taproom
+bar.n 44 :: saloon
 bar.n 45 :: cake
 bar.n 46 :: barroom
 bar.n 47 :: barroom
@@ -82,7 +82,7 @@ fix.v 81 :: repair
 fix.v 82 :: get
 fix.v 83 :: repair
 fix.v 84 :: get
-fix.v 85 :: repair
+fix.v 85 :: get
 fix.v 86 :: get
 fix.v 87 :: get
 fix.v 88 :: get
@@ -90,7 +90,7 @@ fix.v 89 :: repair
 fix.v 90 :: get
 manage.v 91 :: do
 manage.v 92 :: oversee
-manage.v 93 :: oversee
+manage.v 93 :: deal
 manage.v 94 :: do
 manage.v 95 :: care
 manage.v 96 :: oversee
@@ -101,11 +101,11 @@ manage.v 100 :: oversee
 neat.a 101 :: great
 neat.a 102 :: nifty
 neat.a 103 :: great
-neat.a 104 :: great
+neat.a 104 :: tasteful
 neat.a 105 :: nifty
 neat.a 106 :: great
 neat.a 107 :: great
-neat.a 108 :: nifty
+neat.a 108 :: dandy
 neat.a 109 :: straight
 neat.a 110 :: nifty
 rich.a 111 :: productive
@@ -116,7 +116,7 @@ rich.a 115 :: plenteous
 rich.a 116 :: robust
 rich.a 117 :: plenteous
 rich.a 118 :: robust
-rich.a 119 :: plenteous
+rich.a 119 :: productive
 rich.a 120 :: plenteous
 severely.r 121 :: gravely
 severely.r 122 :: badly
@@ -129,7 +129,7 @@ severely.r 128 :: gravely
 severely.r 129 :: badly
 severely.r 130 :: gravely
 stand.v 131 :: resist
-stand.v 132 :: endure
+stand.v 132 :: suffer
 stand.v 133 :: resist
 stand.v 134 :: suffer
 stand.v 135 :: support
@@ -155,7 +155,7 @@ wild.a 154 :: untamed
 wild.a 155 :: crazy
 wild.a 156 :: crazy
 wild.a 157 :: fantastic
-wild.a 158 :: crazy
+wild.a 158 :: untamed
 wild.a 159 :: crazy
 wild.n 160 :: wilderness
 can.n 161 :: toilet
@@ -165,7 +165,7 @@ can.n 164 :: tin
 can.n 165 :: tin
 can.n 166 :: tin
 can.n 167 :: tin
-can.n 168 :: butt
+can.n 168 :: pot
 can.n 169 :: tin
 can.n 170 :: pot
 dark.n 171 :: darkness
@@ -239,8 +239,8 @@ lie.v 238 :: rest
 lie.v 239 :: dwell
 lie.v 240 :: rest
 nasty.a 241 :: awful
-nasty.a 242 :: smutty
-nasty.a 243 :: awful
+nasty.a 242 :: filthy
+nasty.a 243 :: filthy
 nasty.a 244 :: awful
 nasty.a 245 :: filthy
 nasty.a 246 :: awful
@@ -292,9 +292,9 @@ run.v 291 :: tend
 run.v 292 :: work
 run.v 293 :: go
 run.v 294 :: go
-run.v 295 :: go
+run.v 295 :: work
 run.v 296 :: go
-run.v 297 :: campaign
+run.v 297 :: race
 run.v 298 :: go
 run.v 299 :: operate
 run.v 300 :: go

@@ -36,6 +36,14 @@ def remove_punctuation(sentence):
 
     return cleaned_sentence
 
+def remove_numbers(sentence):
+    cleaned_sentence = []
+    for word in sentence:
+        if not word.isnumeric():
+            cleaned_sentence.append(word)
+
+    return cleaned_sentence
+
 def remove_stopwords(sentence):
     stop_words = stopwords.words('english')
     stop_words = set(stop_words)
@@ -51,6 +59,7 @@ def normalize(sentence):
     # Some stack of preprocessings from above subfunctions
     # to normalize a list of tokens
     sentence = remove_punctuation(sentence)
+    sentence = remove_numbers(sentence)
     sentence = lower(sentence)
     sentence = remove_stopwords(sentence)
 
@@ -302,6 +311,46 @@ def wn_simple_lesk_predictor(context):
 
     return lemma_name
 
+# NOTE: This is not for Part 1
+def get_best_predictor_candidates(lemma, pos):
+    # Return solution as a set to make sure unique lemmas are returned
+    possible_synonyms = set([])
+
+    # Retrieve all lexemes for the particular lemma and pos
+    lexemes = wn.lemmas(lemma, pos=pos)
+
+    # Iterate over lexemes
+    for lexeme in lexemes:
+        # Get the synset for current lexeme
+        synset = lexeme.synset()
+
+        # Get the lexemes from the synset
+        for candidate_lemma in synset.lemmas():
+            # Retrieve the name from a lemma structure
+            candidate_lemma_name = candidate_lemma.name()
+
+            if candidate_lemma_name != lemma:
+                # Check if lemma contains multiple words
+                if len(candidate_lemma_name.split('_')) > 1:
+                    # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+                    candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+
+                # Add lemma to the solution
+                possible_synonyms.add(candidate_lemma_name)
+
+    if pos == 'a' or pos == 'v':
+        added_synonyms = set([])
+
+        for synonym in list(possible_synonyms):
+            if len(synonym) > 3:
+                if synonym[len(synonym) - 3:len(synonym)] != 'ing':
+                    added_synonyms.add(synonym + 'ing')
+
+        possible_synonyms.union(added_synonyms)
+
+    # Return the set
+    return possible_synonyms
+
 class Word2VecSubst(object):
 
     def __init__(self, filename):
@@ -424,7 +473,7 @@ class Word2VecSubst(object):
             if word in self.model.wv:
                 target_vector = np.add(target_vector, self.model.wv[word])
 
-        possible_synonyms = list(get_candidates(context.lemma, context.pos))
+        possible_synonyms = list(get_best_predictor_candidates(context.lemma, context.pos))
 
         considered_synonyms = []
         for synonym in possible_synonyms:
@@ -481,5 +530,5 @@ if __name__=="__main__":
         prediction = predictor.predict_best(context)
         print("{}.{} {} :: {}".format(context.lemma, context.pos, context.cid, prediction))
 
-    print('Time elapsed: ')
-    print(time.time() - start)
+    # print('Time elapsed: ')
+    # print(time.time() - start)
