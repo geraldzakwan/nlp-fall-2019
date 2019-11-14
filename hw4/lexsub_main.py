@@ -332,13 +332,54 @@ def get_best_predictor_candidates(lemma, pos):
             if candidate_lemma_name != lemma:
                 # Check if lemma contains multiple words
                 if len(candidate_lemma_name.split('_')) > 1:
-                    # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
-                    candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+                    if pos == 'a' or pos == 'r':
+                        candidate_lemma_name = candidate_lemma_name.replace('_', '-')
+                    else:
+                        # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+                        candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
 
                 # Add lemma to the solution
                 possible_synonyms.add(candidate_lemma_name)
 
-    if pos == 'a' or pos == 'v':
+        # This generates a quite huge boost, from 0.129 to 0.136
+        hypernym_synsets = synset.hypernyms()
+        for hi_syn in hypernym_synsets:
+            for candidate_lemma in hi_syn.lemmas():
+                # Retrieve the name from a lemma structure
+                candidate_lemma_name = candidate_lemma.name()
+
+                if candidate_lemma_name != lemma:
+                    # Check if lemma contains multiple words
+                    if len(candidate_lemma_name.split('_')) > 1:
+                        if pos == 'a' or pos == 'r':
+                            candidate_lemma_name = candidate_lemma_name.replace('_', '-')
+                        else:
+                            # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+                            candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+
+                    # Add lemma to the solution
+                    possible_synonyms.add(candidate_lemma_name)
+
+        # hyponym_synsets = synset.hyponyms()
+        # for ho_syn in hyponym_synsets:
+        #     for candidate_lemma in ho_syn.lemmas():
+        #         # Retrieve the name from a lemma structure
+        #         candidate_lemma_name = candidate_lemma.name()
+        #
+        #         if candidate_lemma_name != lemma:
+        #             # Check if lemma contains multiple words
+        #             if len(candidate_lemma_name.split('_')) > 1:
+        #                 if pos == 'a' or pos == 'r':
+        #                     candidate_lemma_name = candidate_lemma_name.replace('_', '-')
+        #                 else:
+        #                     # Replace '_' with ' ', e.g. 'turn_around' -> 'turn around'
+        #                     candidate_lemma_name = candidate_lemma_name.replace('_', ' ')
+        #
+        #             # Add lemma to the solution
+        #             possible_synonyms.add(candidate_lemma_name)
+
+    # if pos == 'a' or pos == 'v':
+    if pos == 'v':
         added_synonyms = set([])
 
         for synonym in list(possible_synonyms):

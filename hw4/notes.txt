@@ -9,3 +9,9 @@ R3 -> best_coba_coba_2
 
 R4 -> best_coba_coba_3
 0.127 -> Coba" nambahin candidate +ing and window size 10
+
+best_6
+Include hypernym -> 0.136 yeayy
+
+best_7
+Include hyponyms too, but it becomes super low: 0.119
