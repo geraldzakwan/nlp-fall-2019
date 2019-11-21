@@ -35,7 +35,9 @@ will be the same as the input lemma. See comments in the function for more detai
 
 - Still for Part 3, see resolve_best_synset() function for several cases
 that can happen when determining the best sense (e.g. when there is no overlap
-or when there are more than one synsets with max overlap).
+or when there are more than one synsets with max overlap). Also, I don't
+count duplicate overlaps, i.e. if the same word appears twice in the context
+or in the sense definitions/examples, it counts as one.
 
 - For Part 4, I ignore context words that are not in word2vec vocabulary. For
 the input lemma/target word, I don't observe any OOV occurs. The metrics
@@ -49,9 +51,8 @@ it gives lower precision and recall -> 0.121.
 My best solution yields 0.141 precision and recall, which is nearly 2% improvement from Part 5.
 It is implemented in the predict_best() function inside the class Word2VecSubst.
 Allow +-5 minutes time (6 minutes at maximum) for the program to run.
-I include my best prediction
 
-The approaches are as below:
+The approaches for the best predictor are as below:
 
 - Beside using the synsets that contain the input lemma, I also use the
 hypernyms of those synsets to add even more synonym candidates. See function
@@ -80,7 +81,7 @@ it is too general and less likely to be the right substitution for different sen
 But, this doesn't seem to yield any improvements as my predictor never actually
 return a synonym with multiple words (they never have the biggest similarity).
 
-Detailed Results:
+Detailed Results for each part:
 
 - PART 2 - WordNet Frequency Baseline
 (venv) Kartikos-MBP:hw4 kartiko$ python lexsub_main.py lexsub_trial.xml > wn_frequency.predict
